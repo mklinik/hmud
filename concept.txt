@@ -1,0 +1,34 @@
+- there are rooms, items and characters
+- every room, object and player has a description
+- the description of items is static
+- the description of rooms is a static text plus the list characters plus the list of items
+- the description of characters depends on equipment and stats
+- every player has:
+  - stats
+  - an inventory (with objects)
+  - equipped objects
+- stats are:
+  - level
+  - gender
+  - race (Human, Elven, Dwarf)
+  - role (depends on gender, e.g. King/Queen)
+
+
+  Narr / Närrin
+  Zauber / Zauberin
+  Dieb / Diebin
+  Knecht / Magd
+  Fischer / Fischerin
+  Bauer / Bäuerin
+  Schmied / Schmiedin
+  Händler / Händlerin
+  Priester / Priesterin
+  Krieger / Kriegerin
+  Feldherr / Feldherrin
+  Schatzmeister / Schatzmeisterin
+  Prinz / Prinzessin
+  König / Königin
+
+commands:
+  look
+  goto
