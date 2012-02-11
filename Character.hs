@@ -50,6 +50,7 @@ data Character = Character
   , charGender :: Gender
   , charLevel :: Int
   }
+  deriving Eq
 
 instance Describable Character where
   name = charName

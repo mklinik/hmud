@@ -12,6 +12,7 @@ data Room = Room { roomName :: String
                  , roomItems :: [Item]
                  , roomAdjacents :: [String]
                  }
+  deriving (Eq)
 
 instance Describable Room where
   name = roomName
@@ -39,3 +40,11 @@ mkRoom name description adjacents =
 
 roomEnter :: Character -> Room -> Room
 roomEnter char room = room { roomCharacters = char:(roomCharacters room) }
+
+roomSummary :: Room -> String
+roomSummary room = (roomName room) ++ people
+    where
+      people =
+        if (not $ null $ roomCharacters room)
+          then ": " ++ (List.intercalate ", " $ map name $ roomCharacters room)
+          else ": -"
