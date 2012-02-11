@@ -1,10 +1,10 @@
-module World where
+module Hmud.World where
 
 import Data.List (isPrefixOf, find, delete, deleteBy, intercalate)
 
-import Describable
-import Room
-import Character
+import Hmud.Describable
+import Hmud.Room
+import Hmud.Character
 
 data World = World { worldRooms :: [Room]
                    }

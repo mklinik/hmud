@@ -1,4 +1,4 @@
-module Describable where
+module Hmud.Describable where
 
 class Describable a where
   describe :: a -> String

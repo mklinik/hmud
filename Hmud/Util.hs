@@ -1,7 +1,7 @@
-module Util where
+module Hmud.Util where
 
 import qualified Random
-import Character
+import Hmud.Character
 
 randomRace :: IO Race
 randomRace = do

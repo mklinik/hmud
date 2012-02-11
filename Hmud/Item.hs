@@ -1,6 +1,6 @@
-module Item where
+module Hmud.Item where
 
-import Describable
+import Hmud.Describable
 
 data Item = Item
   { itemName :: String

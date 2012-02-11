@@ -1,9 +1,9 @@
-import Item
-import Describable
-import Character
-import Room
-import World
-import Util
+import Hmud.Item
+import Hmud.Describable
+import Hmud.Character
+import Hmud.Room
+import Hmud.World
+import Hmud.Util
 
 amulet = Item { itemName = "Emperor's Amulet", itemDescription = "a shiny amulet, probably with magic powers" }
 

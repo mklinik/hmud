@@ -1,9 +1,9 @@
-module Character where
+module Hmud.Character where
 
 import Data.List
 
-import Describable
-import Item
+import Hmud.Describable
+import Hmud.Item
 
 data Race = Human | Elven | Dwarf
   deriving (Eq, Show, Enum, Bounded)

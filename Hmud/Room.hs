@@ -1,10 +1,10 @@
-module Room where
+module Hmud.Room where
 
 import qualified Data.List as List
 
-import Describable
-import Character
-import Item
+import Hmud.Describable
+import Hmud.Character
+import Hmud.Item
 
 data Room = Room { roomName :: String
                  , roomDescription :: String
