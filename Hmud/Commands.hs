@@ -16,10 +16,15 @@ insert player toName world =
     Left err -> (world, err)
     Right w  -> (w, (name player) ++ " is now in " ++ toName)
 
-goto playerName fromName toName world =
-  case gotoFromTo playerName fromName toName world of
-    Left err -> (world, err)
-    Right w  -> (w, "You are now in " ++ toName)
+goto :: String -> [String] -> WorldAction
+goto playerName args world =
+  case findRoomOfPlayer playerName world of
+    []        -> (world, "player " ++ playerName ++ " not found in any room")
+    r:[]      -> case gotoFromTo playerName (name r) arg world of
+                    Left err -> (world, err)
+                    Right w  -> (w, "You are now in " ++ (arg))
+    otherwise -> (world, "ambiguous player name: " ++ playerName)
+  where arg = unwords args
 
 -- find something to describe in the given room
 -- if no argument is given, describe the room
