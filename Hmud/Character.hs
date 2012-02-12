@@ -1,6 +1,7 @@
 module Hmud.Character where
 
 import Data.List
+import Data.Char (toLower)
 
 import Hmud.Describable
 import Hmud.Item
@@ -55,8 +56,8 @@ data Character = Character
 instance Describable Character where
   name = charName
   describe char = "a level " ++ (show $ charLevel char)
-                       ++ " " ++ (show $ charGender char)
-                       ++ " " ++ (show $ charRace char)
+                       ++ " " ++ (map toLower $ show $ charGender char)
+                       ++ " " ++ (map toLower $ show $ charRace char)
                        ++ " " ++ role
     where
       role = case Data.List.lookup (charRole char) genderedRoles of
