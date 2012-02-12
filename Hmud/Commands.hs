@@ -29,8 +29,8 @@ goto playerName args world =
   case findRoomOfPlayerExactly playerName world of
     Left err -> (world, err)
     Right r  -> case gotoFromTo playerName (name r) arg world of
-                    Left err -> (world, err)
-                    Right w  -> (w, "You are now in " ++ (arg))
+                    Left err        -> (world, err)
+                    Right (w, room) -> (w, "You are now in " ++ (name room) ++ ", " ++ (describe room))
   where arg = unwords args
 
 -- find something to describe in the given room

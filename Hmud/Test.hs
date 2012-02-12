@@ -53,7 +53,7 @@ specs = descriptions
     , it "works when everything is fine"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  let w3 = fromRight $ gotoFromTo "player0" "The Black Unicorn" "town square" w2
+                  let (w3, _) = fromRight $ gotoFromTo "player0" "The Black Unicorn" "town square" w2
                   let fromRoom = fromRight $ findRoom "The Black Unicorn" w3
                   let toRoom   = fromRight $ findRoom "town square" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player0" fromRoom)
@@ -62,7 +62,7 @@ specs = descriptions
     , it "works with abbreviated names"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black" world
-                  let w3 = fromRight $ gotoFromTo "pl" "Th" "to" w2
+                  let (w3, _) = fromRight $ gotoFromTo "pl" "Th" "to" w2
                   let fromRoom = fromRight $ findRoom "The Blac" w3
                   let toRoom   = fromRight $ findRoom "tow" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player" fromRoom)
