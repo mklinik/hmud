@@ -1,8 +1,11 @@
 module Hmud.Commands where
 
+import Data.List (intercalate)
+
 import Hmud.Describable
 import Hmud.World
 import Hmud.Room
+import Hmud.Character
 
 data CommandTag = Quit | Other
 
@@ -45,3 +48,11 @@ lookAt playerName args world =
     []        -> (world, "player " ++ playerName ++ " not found in any room")
     r:[]      -> (world, describeThing r (unwords args))
     otherwise -> (world, "ambiguous player name: " ++ playerName)
+
+inventory :: String -> [String] -> WorldAction
+inventory playerName _ world = case findCharacterExactly playerName world of
+  Left err   -> (world, err)
+  Right char -> (world, if null $ charInventory char
+                          then "Your bag of swag is empty."
+                          else "Your possessions: " ++ (intercalate ", " $ map name (charInventory char))
+                )

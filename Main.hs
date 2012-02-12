@@ -36,7 +36,11 @@ stepWorld deliver world action = do
 stepToStdout = stepWorld putStrLn
 
 commands :: [(String, String -> [String] -> WorldAction)]
-commands = [("lookat", lookAt), ("goto", goto)]
+commands =
+  [ ("lookat", lookAt)
+  , ("goto", goto)
+  , ("inventory", inventory)
+  ]
 
 dispatch :: String -> [String] -> Maybe WorldAction
 dispatch playerName tokens = do
