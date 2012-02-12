@@ -8,6 +8,9 @@ import Hmud.World
 import Hmud.Util
 
 amulet = Item { itemName = "Emperor's Amulet", itemDescription = "a shiny amulet, probably with magic powers" }
+theOneRing = Item { itemName = "The One Ring", itemDescription = "precioussssssss" }
+scroll0 = Item { itemName = "scroll", itemDescription = "has incomprehensible things scribbled on it. Boxes, connected with lines. Titled: GTF design documents." }
+beer = Item { itemName = "mug of beer", itemDescription = "a mug filled with fresh, foaming delicious beer." }
 
 tavern = mkRoom
   "The Black Unicorn"

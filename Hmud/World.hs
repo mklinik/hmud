@@ -7,6 +7,7 @@ import Data.Either (rights)
 import Hmud.Describable
 import Hmud.Room
 import Hmud.Character
+import Hmud.Item
 
 data World = World { worldRooms :: [Room]
                    }
@@ -24,6 +25,12 @@ insertCharacterToRoom char toName world = do
   let newToRoom = toRoom { roomCharacters = char:(roomCharacters toRoom) }
   return world { worldRooms = newToRoom:remainingRooms }
 
+insertItemToRoom :: Item -> String -> World -> Either String World
+insertItemToRoom item toName world = do
+  toRoom <- findRoom toName world
+  let remainingRooms = delete toRoom (worldRooms world)
+  let newToRoom = toRoom { roomItems = item:(roomItems toRoom) }
+  return world { worldRooms = newToRoom:remainingRooms }
 
 -- may fail for various obvious reasons
 gotoFromTo :: String -> String -> String -> World -> Either String World

@@ -19,6 +19,11 @@ insert player toName world =
     Left err -> (world, err)
     Right w  -> (w, (name player) ++ " is now in " ++ toName)
 
+insertItem item toName world =
+  case insertItemToRoom item toName world of
+    Left err -> (world, err)
+    Right w  -> (w, (name item) ++ " is now in " ++ toName)
+
 goto :: String -> [String] -> WorldAction
 goto playerName args world =
   case findRoomOfPlayer playerName world of

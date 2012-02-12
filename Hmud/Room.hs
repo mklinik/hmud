@@ -16,15 +16,19 @@ data Room = Room { roomName :: String
 
 instance Describable Room where
   name = roomName
-  describe room = (roomDescription room) ++ people ++ directions
+  describe room = (roomDescription room) ++ people ++ items ++ directions
     where
       people =
         if (not $ null $ roomCharacters room)
-          then "\nThese people are present:\n" ++ (intercalate ", " $ map name $ roomCharacters room)
+          then "\n\nThese people are present:\n" ++ (intercalate ", " $ map name $ roomCharacters room)
+          else ""
+      items =
+        if (not $ null $ roomItems room)
+          then "\n\nThese things lie about:\n" ++ (intercalate ", " $ map name $ roomItems room)
           else ""
       directions =
         if (not $ null $ roomAdjacents room)
-          then "\nFrom here you can go to:\n" ++ (intercalate ", " $ roomAdjacents room)
+          then "\n\nFrom here you can go to:\n" ++ (intercalate ", " $ roomAdjacents room)
           else ""
 
 instance Show Room where
