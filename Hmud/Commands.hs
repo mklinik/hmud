@@ -38,14 +38,17 @@ goto playerName args world =
 -- if no argument is given, describe the room
 -- otherwise, try to find something to describe in the following order:
 --   1) a character in the room
---   2) an item in the room (TODO)
+--   2) an item in the room
 --   3) an item in the current players inventory (TODO)
 describeThing :: Room -> String -> String
 describeThing room []  = "This is " ++ (name room) ++ ", " ++ (describe room)
 describeThing room arg =
   case findCharacter arg room of
-    Left err -> "you can't see " ++ arg
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
+    Left err ->
+      case findItemInRoom arg room of
+        Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
+        Left err -> "you can't see " ++ arg
 
 lookAt :: String -> [String] -> WorldAction
 lookAt playerName args world =

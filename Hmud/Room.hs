@@ -67,3 +67,7 @@ roomSummary room = (roomName room) ++ people
         if (not $ null $ roomCharacters room)
           then ": " ++ (intercalate ", " $ map name $ roomCharacters room)
           else ": -"
+
+findItemInRoom :: String -> Room -> Either String Item
+findItemInRoom itName room = maybe (Left $ "no item " ++ itName ++ " in " ++ (roomName room)) Right
+  $ find (\item -> itName `isPrefixOf` (itemName item)) (roomItems room)
