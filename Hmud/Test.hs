@@ -48,22 +48,22 @@ specs = descriptions
     , it "returns Nothing if there is no such *to* room"
         (either (const True) (const False) $ gotoFromTo "player0" "The Black Unicorn" "what where?" world)
     , it "returns Nothing if there is no such character in the *from* room"
-        (either (const True) (const False) $ gotoFromTo "slayer0" "The Black Unicorn" "Town Square" world)
+        (either (const True) (const False) $ gotoFromTo "slayer0" "The Black Unicorn" "town square" world)
     , it "works when everything is fine"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  let w3 = fromRight $ gotoFromTo "player0" "The Black Unicorn" "Town Square" w2
+                  let w3 = fromRight $ gotoFromTo "player0" "The Black Unicorn" "town square" w2
                   let fromRoom = fromRight $ findRoom "The Black Unicorn" w3
-                  let toRoom   = fromRight $ findRoom "Town Square" w3
+                  let toRoom   = fromRight $ findRoom "town square" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player0" fromRoom)
                   assertEqual "player is now in *toRoom*" (Right player0) (findCharacter "player0" toRoom)
       )
     , it "works with abbreviated names"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black" world
-                  let w3 = fromRight $ gotoFromTo "pl" "Th" "To" w2
+                  let w3 = fromRight $ gotoFromTo "pl" "Th" "to" w2
                   let fromRoom = fromRight $ findRoom "The Blac" w3
-                  let toRoom   = fromRight $ findRoom "Tow" w3
+                  let toRoom   = fromRight $ findRoom "tow" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player" fromRoom)
                   assertEqual "player is now in *toRoom*" (Right player0) (findCharacter "play" toRoom)
       )

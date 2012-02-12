@@ -12,12 +12,17 @@ amulet = Item { itemName = "Emperor's Amulet", itemDescription = "a shiny amulet
 tavern = mkRoom
   "The Black Unicorn"
   "a dusty dark tavern. It smells of delicious food. You hear cheery background music."
-  ["Town Square"]
+  [(name townSquare)]
 
 townSquare = mkRoom
-  "Town Square"
+  "town square"
   "the central meeting place of the town. There is a fountain, and lots of people are busy with their daily routine."
-  ["The Black Unicorn"]
+  [(name tavern), (name ivoryTower)]
+
+ivoryTower = mkRoom
+  "ivory tower"
+  "a tall white building with long hallways, large laboratories and a big library. Inside it is completely quiet, except for the occasional reverberant sound of footsteps. In this place, scholars develop new crazy magic spells. You are at the very top of the tower, in a small chamber with windows to all sides. You can see the whole town from up here."
+  [(name townSquare)]
 
 npc0 = Character
   { charName = "Chris"
@@ -27,4 +32,4 @@ npc0 = Character
   , charLevel = 17
   }
 
-world = World { worldRooms = [tavern, townSquare] }
+world = World { worldRooms = [tavern, townSquare, ivoryTower] }

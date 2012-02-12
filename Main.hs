@@ -57,25 +57,15 @@ loopWithWorld playerName world = do
 
 main = do
   player <- randomCharacter "Markus"
-  npc1 <- randomCharacter "Tom"
+  npc1 <- randomCharacter "Martin"
   npc2 <- randomCharacter "Karin"
-
+  npc3 <- randomCharacter "Kathy"
 
   w2 <- stepToStdout world (insert player "The Black Unicorn")
+  w3 <- stepToStdout w2 (insert npc1 "The Black Unicorn")
+  w4 <- stepToStdout w3 (insert npc2 "The Black Unicorn")
+  w5 <- stepToStdout w4 (insert npc3 "to")
 
-  loopWithWorld "Markus" w2
-
-  -- w3 <- stepToStdout w2 (goto "Markus" "The" "Town Square")
-  -- w4 <- stepToStdout w3 (lookAtRoom "Town Square")
-
-  -- let room = townSquare
-  -- putStrLn $ "Welcome " ++ (name player) ++ ", you are " ++ (describe player) ++ "."
-  -- let room2 = roomEnter player $ roomEnter npc1 room
-  -- putStrLn $ "You are in " ++ (name room2) ++ ", " ++ (describe room2)
-
-  -- let world2 = case insertCharacterToRoom player "The Bl" world of Just w -> w; otherwise -> world
-  -- putStrLn $ worldSummary world2
-  -- let world3 = case gotoFromTo "Markus" "The Bl" "Tow" world2 of Just w -> w; otherwise -> world2
-  -- putStrLn $ worldSummary world3
+  loopWithWorld "Markus" w5
 
   putStrLn "bye."

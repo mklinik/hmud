@@ -36,7 +36,7 @@ describeThing :: Room -> String -> String
 describeThing room []  = "This is " ++ (name room) ++ ", " ++ (describe room)
 describeThing room arg =
   case findCharacter arg room of
-    Left err -> "no such thing to look at: " ++ arg
+    Left err -> "you can't see " ++ arg
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
 
 lookAt :: String -> [String] -> WorldAction
