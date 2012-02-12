@@ -49,8 +49,12 @@ gotoFromTo playerName fromName toName world = do
 worldSummary :: World -> String
 worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))
 
-findRoomOfPlayer :: String -> World -> [Room]
-findRoomOfPlayer playerName world = filter (roomHasCharacter playerName) (worldRooms world)
+findRoomOfPlayerExactly :: String -> World -> Either String Room
+findRoomOfPlayerExactly playerName world =
+  case filter (roomHasCharacterExactly playerName) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ playerName
+    r:[]      -> Right r
+    otherwise -> Left $ "ambiguous character name: " ++ playerName -- should never happen
 
 -- Assuming that player names are unique, if we find any players at all, we only find one
 findCharacterExactly :: String -> World -> Either String Character

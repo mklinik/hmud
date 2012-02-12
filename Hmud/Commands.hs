@@ -26,12 +26,11 @@ insertItem item toName world =
 
 goto :: String -> [String] -> WorldAction
 goto playerName args world =
-  case findRoomOfPlayer playerName world of
-    []        -> (world, "player " ++ playerName ++ " not found in any room")
-    r:[]      -> case gotoFromTo playerName (name r) arg world of
+  case findRoomOfPlayerExactly playerName world of
+    Left err -> (world, err)
+    Right r  -> case gotoFromTo playerName (name r) arg world of
                     Left err -> (world, err)
                     Right w  -> (w, "You are now in " ++ (arg))
-    otherwise -> (world, "ambiguous player name: " ++ playerName)
   where arg = unwords args
 
 -- find something to describe in the given room
@@ -52,10 +51,9 @@ describeThing room arg =
 
 lookAt :: String -> [String] -> WorldAction
 lookAt playerName args world =
-  case findRoomOfPlayer playerName world of
-    []        -> (world, "player " ++ playerName ++ " not found in any room")
-    r:[]      -> (world, describeThing r (unwords args))
-    otherwise -> (world, "ambiguous player name: " ++ playerName)
+  case findRoomOfPlayerExactly playerName world of
+    Left err -> (world, err)
+    Right r  -> (world, describeThing r (unwords args))
 
 inventory :: String -> [String] -> WorldAction
 inventory playerName _ world = case findCharacterExactly playerName world of

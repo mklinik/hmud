@@ -53,9 +53,9 @@ findCharacterInRoomExactly playerName room =
     Right
     (find (\char -> playerName == (charName char)) (roomCharacters room))
 
-roomHasCharacter :: String -> Room -> Bool
-roomHasCharacter chName room =
-  either (const False) (const True) $ findCharacter chName room
+roomHasCharacterExactly :: String -> Room -> Bool
+roomHasCharacterExactly chName room =
+  either (const False) (const True) $ findCharacterInRoomExactly chName room
 
 roomEnter :: Character -> Room -> Room
 roomEnter char room = room { roomCharacters = char:(roomCharacters room) }
