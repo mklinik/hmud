@@ -67,6 +67,11 @@ specs = descriptions
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player" fromRoom)
                   assertEqual "player is now in *toRoom*" (Right player0) (findCharacter "play" toRoom)
       )
+    , it "fails when trying to go to the same room again"
+      (TestCase $ do
+                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
+                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo "player0" "The Black" "The Black Un" w2
+      )
     ]
   ]
 
