@@ -1,6 +1,7 @@
 module Hmud.World where
 
 import Data.List (isPrefixOf, find, delete, deleteBy, intercalate)
+import qualified Control.Monad.Error
 
 import Hmud.Describable
 import Hmud.Room
@@ -10,27 +11,32 @@ data World = World { worldRooms :: [Room]
                    }
   deriving Eq
 
-findRoom :: String -> World -> Maybe Room
-findRoom rName world = find (\room -> rName `isPrefixOf` (roomName room)) (worldRooms world)
 
-insertCharacterToRoom :: Character -> String -> World -> Maybe World
+findRoom :: String -> World -> Either String Room
+findRoom rName world = maybe (Left $ rName ++ ": no such room") Right
+  $ find (\room -> rName `isPrefixOf` (roomName room)) (worldRooms world)
+
+insertCharacterToRoom :: Character -> String -> World -> Either String World
 insertCharacterToRoom char toName world = do
-  toRoom <- find (\room -> toName   `isPrefixOf` (roomName room)) (worldRooms world)
+  toRoom <- findRoom toName world
   let remainingRooms = delete toRoom (worldRooms world)
   let newToRoom = toRoom { roomCharacters = char:(roomCharacters toRoom) }
   return world { worldRooms = newToRoom:remainingRooms }
 
 
 -- may fail for various obvious reasons
-gotoFromTo :: String -> String -> String -> World -> Maybe World
+gotoFromTo :: String -> String -> String -> World -> Either String World
 gotoFromTo playerName fromName toName world = do
-  fromRoom <- findRoom fromName world
-  toRoom   <- findRoom toName world
-  let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
-  player <- find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters fromRoom)
-  let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
-  let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
-  return world { worldRooms = newFromRoom:newToRoom:remainingRooms }
+      fromRoom <- findRoom fromName world
+      toRoom   <- findRoom toName world
+      let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
+      player <- findCharacter playerName fromRoom
+      let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
+      let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
+      Right $ world { worldRooms = newFromRoom:newToRoom:remainingRooms }
 
 worldSummary :: World -> String
 worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))
+
+findRoomOfPlayer :: String -> World -> [Room]
+findRoomOfPlayer playerName world = filter (roomHasCharacter playerName) (worldRooms world)
