@@ -39,21 +39,25 @@ goto playerName args world =
 --   1) a character in the room
 --   2) an item in the room
 --   3) an item in the current players inventory (TODO)
-describeThing :: Room -> String -> String
-describeThing room []  = "This is " ++ (name room) ++ ", " ++ (describe room)
-describeThing room arg =
+describeThing :: Room -> String -> String -> String
+describeThing room [] _ = "This is " ++ (name room) ++ ", " ++ (describe room)
+describeThing room arg playerName =
   case findCharacter arg room of
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
     Left err ->
       case findItemInRoom arg room of
         Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
-        Left err -> "you can't see " ++ arg
+        Left err -> case findCharacterInRoomExactly playerName room of
+          Right p  -> case characterFindItem arg p of
+            Right i  -> "You see " ++ (name i) ++ ", " ++ (describe i)
+            Left err -> "you can't see " ++ arg
+          Left err -> "you can't see " ++ arg
 
 lookAt :: String -> [String] -> WorldAction
 lookAt playerName args world =
   case findRoomOfPlayerExactly playerName world of
     Left err -> (world, err)
-    Right r  -> (world, describeThing r (unwords args))
+    Right r  -> (world, describeThing r (unwords args) playerName)
 
 inventory :: String -> [String] -> WorldAction
 inventory playerName _ world = case findCharacterExactly playerName world of

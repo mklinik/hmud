@@ -71,3 +71,10 @@ instance Show Character where
   show = charName
 
 giveItemToCharacter item char = char { charInventory = item : (charInventory char) }
+
+characterFindItem :: String -> Character -> Either String Item
+characterFindItem itName char =
+  maybe
+    (Left $ "no item " ++ itName ++ " in " ++ (name char) ++ "'s inventory")
+    Right
+    (find (\item -> itName `isPrefixOf` (name item)) (charInventory char))
