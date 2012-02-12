@@ -64,3 +64,6 @@ instance Describable Character where
         Just (maleRoleName, femaleRoleName) -> if (charGender char == Male )
                                                then maleRoleName
                                                else femaleRoleName
+
+instance Show Character where
+  show = charName

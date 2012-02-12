@@ -38,5 +38,5 @@ main = do
 
   let world2 = case insertCharacterToRoom player "The Bl" world of Just w -> w; otherwise -> world
   putStrLn $ worldSummary world2
-  let world3 = case characterGoesFromTo "Markus" "The Bl" "Tow" world2 of Just w -> w; otherwise -> world2
+  let world3 = case gotoFromTo "Markus" "The Bl" "Tow" world2 of Just w -> w; otherwise -> world2
   putStrLn $ worldSummary world3

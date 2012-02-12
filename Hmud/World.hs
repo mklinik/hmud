@@ -8,6 +8,10 @@ import Hmud.Character
 
 data World = World { worldRooms :: [Room]
                    }
+  deriving Eq
+
+findRoom :: String -> World -> Maybe Room
+findRoom rName world = find (\room -> rName `isPrefixOf` (roomName room)) (worldRooms world)
 
 insertCharacterToRoom :: Character -> String -> World -> Maybe World
 insertCharacterToRoom char toName world = do
@@ -18,10 +22,10 @@ insertCharacterToRoom char toName world = do
 
 
 -- may fail for various obvious reasons
-characterGoesFromTo :: String -> String -> String -> World -> Maybe World
-characterGoesFromTo playerName fromName toName world = do
-  fromRoom <- find (\room -> fromName `isPrefixOf` (roomName room)) (worldRooms world)
-  toRoom   <- find (\room -> toName   `isPrefixOf` (roomName room)) (worldRooms world)
+gotoFromTo :: String -> String -> String -> World -> Maybe World
+gotoFromTo playerName fromName toName world = do
+  fromRoom <- findRoom fromName world
+  toRoom   <- findRoom toName world
   let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
   player <- find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters fromRoom)
   let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }

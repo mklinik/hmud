@@ -1,6 +1,6 @@
 module Hmud.Room where
 
-import qualified Data.List as List
+import Data.List (find, intercalate, isPrefixOf)
 
 import Hmud.Describable
 import Hmud.Character
@@ -20,11 +20,11 @@ instance Describable Room where
     where
       people =
         if (not $ null $ roomCharacters room)
-          then "\nThese people are present:\n" ++ (List.intercalate ", " $ map name $ roomCharacters room)
+          then "\nThese people are present:\n" ++ (intercalate ", " $ map name $ roomCharacters room)
           else ""
       directions =
         if (not $ null $ roomAdjacents room)
-          then "\nFrom here you can go to:\n" ++ (List.intercalate ", " $ roomAdjacents room)
+          then "\nFrom here you can go to:\n" ++ (intercalate ", " $ roomAdjacents room)
           else ""
 
 instance Show Room where
@@ -38,6 +38,9 @@ mkRoom name description adjacents =
        , roomAdjacents = adjacents
        }
 
+findCharacter :: String -> Room -> Maybe Character
+findCharacter playerName room = find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters room)
+
 roomEnter :: Character -> Room -> Room
 roomEnter char room = room { roomCharacters = char:(roomCharacters room) }
 
@@ -46,5 +49,5 @@ roomSummary room = (roomName room) ++ people
     where
       people =
         if (not $ null $ roomCharacters room)
-          then ": " ++ (List.intercalate ", " $ map name $ roomCharacters room)
+          then ": " ++ (intercalate ", " $ map name $ roomCharacters room)
           else ": -"
