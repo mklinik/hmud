@@ -1,6 +1,7 @@
 module Hmud.Room where
 
-import Data.List (find, intercalate, isPrefixOf)
+import Data.List (find, intercalate, isPrefixOf, delete)
+import qualified Control.Monad.Error
 
 import Hmud.Describable
 import Hmud.Character
@@ -71,3 +72,14 @@ roomSummary room = (roomName room) ++ people
 findItemInRoom :: String -> Room -> Either String Item
 findItemInRoom itName room = maybe (Left $ "no item " ++ itName ++ " in " ++ (roomName room)) Right
   $ find (\item -> itName `isPrefixOf` (itemName item)) (roomItems room)
+
+removeItemFromRoom :: String -> Room -> Either String (Room, Item)
+removeItemFromRoom itName room = do
+  item <- findItemInRoom itName room
+  let newRoom = room { roomItems = delete item (roomItems room) }
+  Right (newRoom, item)
+
+updateCharInRoom :: Character -> Room -> Either String Room
+updateCharInRoom newChar room = do
+  oldChar <- findCharacterInRoomExactly (name newChar) room
+  Right $ room { roomCharacters = newChar : (delete oldChar (roomCharacters room)) }

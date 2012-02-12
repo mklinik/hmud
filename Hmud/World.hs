@@ -63,3 +63,18 @@ findCharacterExactly playerName world =
     []        -> Left $ "no such character: " ++ playerName
     p:[]      -> Right p
     otherwise -> Left $ "ambiguous character name: " ++ playerName
+
+characterPickupItem :: String -> String -> World -> Either String (World, Item)
+characterPickupItem chName itName world = do
+  oldRoom <- findRoomOfPlayerExactly chName world
+  oldChar <- findCharacterInRoomExactly chName oldRoom
+  (tmpRoom, item) <- removeItemFromRoom itName oldRoom
+  let newChar = giveItemToCharacter item oldChar
+  newRoom <- updateCharInRoom newChar tmpRoom
+  newWorld <- updateRoomInWorld newRoom world
+  Right (newWorld, item)
+
+updateRoomInWorld :: Room -> World -> Either String World
+updateRoomInWorld newRoom world = do
+  oldRoom <- findRoom (name newRoom) world
+  Right $ world { worldRooms = newRoom : (delete oldRoom (worldRooms world)) }

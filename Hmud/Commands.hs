@@ -62,3 +62,9 @@ inventory playerName _ world = case findCharacterExactly playerName world of
                           then "Your bag of swag is empty."
                           else "Your possessions: " ++ (intercalate ", " $ map name (charInventory char))
                 )
+
+pickup :: String -> [String] -> WorldAction
+pickup playerName args world =
+  case characterPickupItem playerName (unwords args) world of
+    Left err     -> (world, err)
+    Right (w, i) -> (w, "You take " ++ (name i))

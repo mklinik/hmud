@@ -69,3 +69,5 @@ instance Describable Character where
 
 instance Show Character where
   show = charName
+
+giveItemToCharacter item char = char { charInventory = item : (charInventory char) }
