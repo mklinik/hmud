@@ -1,34 +1,21 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Hmud.Util where
 
 import qualified Random
 import Hmud.Character
 
-randomRace :: IO Race
-randomRace = do
-  let minInt = fromEnum $ (minBound::Race)
-  let maxInt = fromEnum $ (maxBound::Race)
-  randInt <- Random.randomRIO (minInt, maxInt)
-  return $ toEnum randInt
-
-randomRole :: IO Role
-randomRole = do
-  let minInt = fromEnum $ (minBound::Role)
-  let maxInt = fromEnum $ (maxBound::Role)
-  randInt <- Random.randomRIO (minInt, maxInt)
-  return $ toEnum randInt
-
-randomGender :: IO Gender
-randomGender = do
-  let minInt = fromEnum $ (minBound::Gender)
-  let maxInt = fromEnum $ (maxBound::Gender)
-  randInt <- Random.randomRIO (minInt, maxInt)
-  return $ toEnum randInt
+randomEnum :: forall a. (Enum a, Bounded a) => IO a
+randomEnum = do
+  let minBoundInt = fromEnum (minBound :: a)
+  let maxBoundInt = fromEnum (maxBound :: a)
+  randomInt <- Random.randomRIO (minBoundInt, maxBoundInt)
+  return $ toEnum randomInt
 
 randomCharacter :: String -> IO Character
 randomCharacter name = do
-  race <- randomRace
-  role <- randomRole
-  gender <- randomGender
+  race <- randomEnum
+  role <- randomEnum
+  gender <- randomEnum
   level <- Random.randomRIO (1,99)
   return Character { charName = name
                    , charRace = race
