@@ -2,6 +2,7 @@ module Hmud.World where
 
 import Data.List (isPrefixOf, find, delete, deleteBy, intercalate)
 import qualified Control.Monad.Error
+import Data.Either (rights)
 
 import Hmud.Describable
 import Hmud.Room
@@ -43,3 +44,11 @@ worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))
 
 findRoomOfPlayer :: String -> World -> [Room]
 findRoomOfPlayer playerName world = filter (roomHasCharacter playerName) (worldRooms world)
+
+-- Assuming that player names are unique, if we find any players at all, we only find one
+findCharacterExactly :: String -> World -> Either String Character
+findCharacterExactly playerName world =
+  case rights $ map (findCharacterInRoomExactly playerName) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ playerName
+    p:[]      -> Right p
+    otherwise -> Left $ "ambiguous character name: " ++ playerName

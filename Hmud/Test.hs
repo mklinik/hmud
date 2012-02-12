@@ -73,6 +73,24 @@ specs = descriptions
                   assertBool "going to the same room fails" $ isLeft $ gotoFromTo "player0" "The Black" "The Black Un" w2
       )
     ]
+  , describe "findCharacterExactly"
+    [ it "succeeds when everything is fine"
+      (TestCase $ do
+                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
+                  assertEqual "player found" (Right player0) (findCharacterExactly "player0" w2)
+                  assertBool "player not found" $ isLeft (findCharacterExactly "slayer0" w2)
+      )
+    , it "fails in the empty world"
+      (TestCase $ do
+                  assertBool "player not found" $ isLeft (findCharacterExactly "player0" emptyWorld)
+                  assertBool "player not found" $ isLeft (findCharacterExactly "slayer0" emptyWorld)
+      )
+    , it "fails with partial names"
+      (TestCase $ do
+                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
+                  assertBool "player not found" $ isLeft (findCharacterExactly "pla" w2)
+      )
+    ]
   ]
 
 main = hspec specs

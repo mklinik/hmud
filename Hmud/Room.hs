@@ -42,6 +42,13 @@ findCharacter :: String -> Room -> Either String Character
 findCharacter playerName room = maybe (Left $ "no character " ++ playerName ++ " in " ++ (roomName room)) Right
   $ find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters room)
 
+findCharacterInRoomExactly :: String -> Room -> Either String Character
+findCharacterInRoomExactly playerName room =
+  maybe
+    (Left $ "no character " ++ playerName ++ " in " ++ (roomName room))
+    Right
+    (find (\char -> playerName == (charName char)) (roomCharacters room))
+
 roomHasCharacter :: String -> Room -> Bool
 roomHasCharacter chName room =
   either (const False) (const True) $ findCharacter chName room
