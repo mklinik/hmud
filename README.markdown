@@ -37,6 +37,11 @@ provides odd characters, locations and items.
   - gender
   - race (Human, Elven, Dwarf)
   - role (Knight, Wizard, King, etc)
+- The program is divided in two parts: the game engine, and the XMPP frontend
+- The XMPP frontend must ensure that player names are unique
+- To use XMPP grou chats, players must already have a jabber account, so we
+  don't need to care about logins etc.
+- Just map a character to a jabber ID somehow
 
 Commands
 ========
