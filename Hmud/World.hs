@@ -29,11 +29,14 @@ gotoFromTo :: String -> String -> String -> World -> Either String World
 gotoFromTo playerName fromName toName world = do
       fromRoom <- findRoom fromName world
       toRoom   <- findRoom toName world
-      let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
-      player <- findCharacter playerName fromRoom
-      let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
-      let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
-      Right $ world { worldRooms = newFromRoom:newToRoom:remainingRooms }
+      if fromRoom == toRoom
+        then (Left "You are already there.")
+        else do
+          let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
+          player <- findCharacter playerName fromRoom
+          let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
+          let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
+          Right $ world { worldRooms = newFromRoom:newToRoom:remainingRooms }
 
 worldSummary :: World -> String
 worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))
