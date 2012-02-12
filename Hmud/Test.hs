@@ -17,6 +17,7 @@ player0 = Character
   , charRole = Fool
   , charGender = Female
   , charLevel = 1
+  , charInventory = []
   }
 
 emptyWorld = World { worldRooms = [] }

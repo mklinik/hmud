@@ -50,6 +50,7 @@ data Character = Character
   , charRole :: Role
   , charGender :: Gender
   , charLevel :: Int
+  , charInventory :: [Item]
   }
   deriving Eq
 

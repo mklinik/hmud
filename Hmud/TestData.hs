@@ -30,6 +30,7 @@ npc0 = Character
   , charRole = Fool
   , charGender = Male
   , charLevel = 17
+  , charInventory = []
   }
 
 world = World { worldRooms = [tavern, townSquare, ivoryTower] }

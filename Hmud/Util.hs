@@ -22,4 +22,5 @@ randomCharacter name = do
                    , charRole = role
                    , charGender = gender
                    , charLevel = level
+                   , charInventory = []
                    }
