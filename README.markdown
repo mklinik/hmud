@@ -43,6 +43,44 @@ provides odd characters, locations and items.
   don't need to care about logins etc.
 - Just map a character to a jabber ID somehow
 
+Screenshot
+==========
+
+The XMPP frontend does not yet exist. You interact with the game using ghci, no readline.
+
+    $ ghci Main.hs
+    *Main> main
+    >>> look
+    This is The Black Unicorn, a dusty dark tavern. It smells of delicious food. You hear cheery background music.
+
+    These people are present:
+    Karin, Martin, Markus
+
+    These things lie about:
+    mug of beer
+
+    From here you can go to:
+    town square
+    >>> lookat Markus
+    You see Markus, a level 7 male elven Merchant
+    >>> l mug
+    You see mug of beer, filled with fresh, foaming, delicious beer.
+    >>> take mug
+    You take mug of beer
+    >>> inventory
+    Your possessions: mug of beer
+    >>> look mug
+    You see mug of beer, filled with fresh, foaming, delicious beer.
+    >>> goto town
+    You are now in town square, the central meeting place of the town. There is a fountain, trees and flowers, and lots of people that are busy with their daily routine. The sun shines, birds sing and everybody is quite happy.
+
+    These people are present:
+    Markus, Kathy
+
+    From here you can go to:
+    The Black Unicorn, ivory tower
+    >>>
+
 Commands
 ========
 
@@ -62,9 +100,9 @@ do the same thing.
 - goto *room-name*
  - go to a different room. Only possible if *room-name* is adjacent to the
    current room
-- pickup
+- take *item-name*
  - pickup an item from the current room
-- put
- - put an item in the current room
+- put *item-name*
+ - put an item from your inventory in the current room
 - give *item* to *character*
  - give an item from your inventory to another character
