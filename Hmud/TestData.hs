@@ -16,7 +16,7 @@ tavern = mkRoom
 
 townSquare = mkRoom
   "town square"
-  "the central meeting place of the town. There is a fountain, and lots of people are busy with their daily routine."
+  "the central meeting place of the town. There is a fountain, trees and flowers, and lots of people that are busy with their daily routine. The sun shines, birds sing and everybody is quite happy."
   [(name tavern), (name ivoryTower)]
 
 ivoryTower = mkRoom
