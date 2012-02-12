@@ -57,6 +57,15 @@ specs = descriptions
                   assertEqual "player is no longer in *fromRoom*" Nothing (findCharacter "player0" fromRoom)
                   assertEqual "player is now in *toRoom*" (Just player0) (findCharacter "player0" toRoom)
       )
+    , it "works with abbreviated names"
+      (TestCase $ do
+                  let w2 = fromJust $ insertCharacterToRoom player0 "The Black" world
+                  let w3 = fromJust $ gotoFromTo "pl" "Th" "To" w2
+                  let fromRoom = fromJust $ findRoom "The Blac" w3
+                  let toRoom   = fromJust $ findRoom "Tow" w3
+                  assertEqual "player is no longer in *fromRoom*" Nothing (findCharacter "player" fromRoom)
+                  assertEqual "player is now in *toRoom*" (Just player0) (findCharacter "play" toRoom)
+      )
     ]
   ]
 
