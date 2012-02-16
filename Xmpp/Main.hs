@@ -23,6 +23,7 @@ botPassword = "abc"
 botResource = "oracle"
 homepageURL = "https://github.com/mklinik/hmud"
 groupchatJID = "gtf@conference.localhost"
+botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
 
 stepToStdout = stepWorld putStrLn
 
@@ -107,15 +108,17 @@ run userNames@(nicks, users) world = do
       RoleChange _ -> -- a user has joined
         case occJid occupant of
           Nothing -> return (userNames, world) -- anonymous users don't get a character
-          Just jid ->
-            let (isNewUser, newUserNames) = updatePlayerName jid $ updateNick (occNick occupant) jid userNames
-              in if isNewUser
-                  then do
-                    player <- liftIO $ randomCharacter (jid2player jid)
-                    newWorld <- liftIO $ stepWorld (putStrLn) world (insert player "The Black Unicorn")
-                    sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
-                    return (newUserNames, newWorld)
-                  else return (newUserNames, world)
+          Just jid -> if (jid == botJID)
+            then return (userNames, world) -- filter presence msg from myself
+            else
+              let (isNewUser, newUserNames) = updatePlayerName jid $ updateNick (occNick occupant) jid userNames
+                in if isNewUser
+                    then do
+                      player <- liftIO $ randomCharacter (jid2player jid)
+                      newWorld <- liftIO $ stepWorld (putStrLn) world (insert player "The Black Unicorn")
+                      sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
+                      return (newUserNames, newWorld)
+                    else return (newUserNames, world)
       -- NickChange nick -> liftIO $ putStrLn $ "NickChange: " ++ nick -- TODO: track nick changes
       otherwise -> return (userNames, world)
     run newUserNames newWorld
