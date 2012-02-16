@@ -92,7 +92,9 @@ forge playerName args world =
       then let description = unwords $ tail desc_
                itName = unwords name_
            in
-             case do room <- findRoomOfPlayerExactly playerName world
+             case do char <- findCharacterExactly playerName world
+                     scrollOfForgery <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
+                     room <- findRoomOfPlayerExactly playerName world
                      insertItemToRoom (Item { itemName = itName, itemDescription = description }) (roomName room) world
              of
                Left err -> (world, err)

@@ -10,6 +10,7 @@ import Hmud.Util
 amulet = Item { itemName = "Emperor's Amulet", itemDescription = "a shiny amulet, probably with magic powers" }
 theOneRing = Item { itemName = "The One Ring", itemDescription = "precioussssssss" }
 scroll0 = Item { itemName = "scroll", itemDescription = "that has incomprehensible things scribbled on it: boxes connected with lines. The scroll is titled: \"GTF design documents.\"" }
+scroll1 = Item { itemName = "scroll of forgery", itemDescription = "enables the forge command" }
 beer = Item { itemName = "mug of beer", itemDescription = "filled with fresh, foaming, delicious beer." }
 
 tavern = mkRoom

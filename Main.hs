@@ -74,7 +74,8 @@ main = do
   w5 <- stepToStdout w4 (insert npc3 "town square")
   w6 <- stepToStdout w5 (insertItem scroll0 "ivory tower")
   w7 <- stepToStdout w6 (insertItem beer "The Black Unicorn")
+  w8 <- stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
 
-  loopWithWorld "Markus" w7
+  loopWithWorld "Markus" w8
 
   putStrLn "bye."
