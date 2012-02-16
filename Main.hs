@@ -1,6 +1,6 @@
 import Control.Monad
 
-import Data.List (isPrefixOf)
+import Data.List (isPrefixOf, intercalate)
 
 import Hmud.Item
 import Hmud.Describable
@@ -52,9 +52,10 @@ dispatch playerName tokens = do
   case tokens of
     []             -> Nothing
     (command:args) -> case (filter (\c -> command `isPrefixOf` (fst c)) commands) of
-                               []        -> Just $ idWorldAction $ "no such command: " ++ command
-                               c:[]      -> Just $ (snd c) playerName args
-                               otherwise -> Just $ idWorldAction $ "ambiguous command: " ++ command
+      []   -> Just $ idWorldAction $ "no such command: " ++ command
+      c:[] -> Just $ (snd c) playerName args
+      cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
+                     ++ (intercalate ", " $ map fst cs)
 
 loopWithWorld playerName world = do
   putStr ">>> "
