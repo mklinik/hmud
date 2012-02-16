@@ -1,0 +1,20 @@
+HOWTO setup ejabberd for testing
+================================
+
+- install ejabberd
+
+- the default debian ejabberd configuration, found in
+  /etc/ejabberd/ejabberd.cfg, starts a jabber server serving localhost. It has
+  group chat enabled by default.
+
+- to enable account registration, change the line
+    {access, register, [{deny, all}]}.
+  to
+    {access, register, [{allow, all}]}.
+
+- set registration timeout to some lower value (time is obviously in seconds)
+    {registration_timeout, 10}.
+
+- restart ejabberd
+
+- use a jabber client to create some users
