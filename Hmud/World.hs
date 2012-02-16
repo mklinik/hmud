@@ -78,3 +78,13 @@ updateRoomInWorld :: Room -> World -> Either String World
 updateRoomInWorld newRoom world = do
   oldRoom <- findRoom (name newRoom) world
   Right $ world { worldRooms = newRoom : (delete oldRoom (worldRooms world)) }
+
+characterPutItem :: String -> String -> World -> Either String (World, Item)
+characterPutItem chName itName world = do
+  oldRoom <- findRoomOfPlayerExactly chName world
+  oldChar <- findCharacterInRoomExactly chName oldRoom
+  (newChar, item) <- removeItemFromInventory itName oldChar
+  newRoom <- updateCharInRoom newChar oldRoom
+  tmpWorld <- updateRoomInWorld newRoom world
+  newWorld <- insertItemToRoom item (name newRoom) tmpWorld
+  Right (newWorld, item)

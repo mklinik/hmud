@@ -78,3 +78,8 @@ characterFindItem itName char =
     (Left $ "no item " ++ itName ++ " in " ++ (name char) ++ "'s inventory")
     Right
     (find (\item -> itName `isPrefixOf` (name item)) (charInventory char))
+
+removeItemFromInventory :: String -> Character -> Either String (Character, Item)
+removeItemFromInventory itName char = do
+  item <- characterFindItem itName char
+  Right (char { charInventory = delete item (charInventory char) }, item)

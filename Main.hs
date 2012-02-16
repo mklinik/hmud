@@ -41,6 +41,7 @@ commands =
   , ("goto", goto)
   , ("inventory", inventory)
   , ("take", pickup)
+  , ("put", put)
   ]
 
 dispatch :: String -> [String] -> Maybe WorldAction

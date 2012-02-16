@@ -72,3 +72,11 @@ pickup playerName args world =
   case characterPickupItem playerName (unwords args) world of
     Left err     -> (world, err)
     Right (w, i) -> (w, "You take " ++ (name i))
+
+put :: String -> [String] -> WorldAction
+put playerName [] world =
+    (world, "You drop nothing.")
+put playerName args world =
+  case characterPutItem playerName (unwords args) world of
+    Left err     -> (world, err)
+    Right (w, i) -> (w, "You drop " ++ (name i))
