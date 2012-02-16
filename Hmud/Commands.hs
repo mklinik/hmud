@@ -6,6 +6,7 @@ import Hmud.Describable
 import Hmud.World
 import Hmud.Room
 import Hmud.Character
+import Hmud.Item
 
 data CommandTag = Quit | Other
 
@@ -82,3 +83,18 @@ put playerName args world =
   case characterPutItem playerName (unwords args) world of
     Left err     -> (world, err)
     Right (w, i) -> (w, "You drop " ++ (name i))
+
+forge :: String -> [String] -> WorldAction
+forge playerName args world =
+  let (name_, desc_) = span (\x -> x /= "$") args
+  in
+    if (length name_ > 0 && length desc_ > 1)
+      then let description = unwords $ tail desc_
+               itName = unwords name_
+           in
+             case do room <- findRoomOfPlayerExactly playerName world
+                     insertItemToRoom (Item { itemName = itName, itemDescription = description }) (roomName room) world
+             of
+               Left err -> (world, err)
+               Right w  -> (w, "You forged a new " ++ itName)
+      else (world, "usage: forge <item-name> $ <item-description>")
