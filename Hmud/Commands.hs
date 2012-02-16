@@ -68,6 +68,8 @@ inventory playerName _ world = case findCharacterExactly playerName world of
                 )
 
 pickup :: String -> [String] -> WorldAction
+pickup playerName [] world =
+    (world, "You take nothing.")
 pickup playerName args world =
   case characterPickupItem playerName (unwords args) world of
     Left err     -> (world, err)
