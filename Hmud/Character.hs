@@ -2,6 +2,7 @@ module Hmud.Character where
 
 import Data.List
 import Data.Char (toLower)
+import qualified Control.Monad.Error
 
 import Hmud.Describable
 import Hmud.Item

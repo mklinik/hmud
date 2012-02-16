@@ -93,10 +93,14 @@ forge playerName args world =
                itName = unwords name_
            in
              case do char <- findCharacterExactly playerName world
-                     scrollOfForgery <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
+                     _ <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
+                     let newChar = giveItemToCharacter
+                                     (Item { itemName = itName, itemDescription = description })
+                                     char
                      room <- findRoomOfPlayerExactly playerName world
-                     insertItemToRoom (Item { itemName = itName, itemDescription = description }) (roomName room) world
+                     newRoom <- updateCharInRoom newChar room
+                     updateRoomInWorld newRoom world
              of
                Left err -> (world, err)
-               Right w  -> (w, "You forged a new " ++ itName)
+               Right w  -> (w, "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands.")
       else (world, "usage: forge <item-name> $ <item-description>")
