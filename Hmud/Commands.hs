@@ -104,3 +104,18 @@ forge playerName args world =
                Left err -> (world, err)
                Right w  -> (w, "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands.")
       else (world, "usage: forge <item-name> $ <item-description>")
+
+discard :: String -> [String] -> WorldAction
+discard playerName [] world = do
+    (world, "You discard nothing.")
+discard playerName args world =
+  case do
+    oldRoom <- findRoomOfPlayerExactly playerName world
+    oldChar <- findCharacterInRoomExactly playerName oldRoom
+    (newChar, item) <- removeItemFromInventory (unwords args) oldChar
+    newRoom <- updateCharInRoom newChar oldRoom
+    newWorld <- updateRoomInWorld newRoom world
+    Right (newWorld, item)
+  of
+    Left err     -> (world, err)
+    Right (w, i) -> (w, "You discard " ++ (name i))

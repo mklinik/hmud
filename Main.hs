@@ -43,6 +43,7 @@ commands =
   , ("take", pickup)
   , ("put", put)
   , ("forge", forge)
+  , ("discard", discard)
   ]
 
 dispatch :: String -> [String] -> Maybe WorldAction
