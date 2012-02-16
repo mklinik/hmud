@@ -1,7 +1,8 @@
-module Xmpp.Main where
+module Main where
 
 import Network
 import Network.XMPP
+import Network.XMPP.MUC
 import Data.List (isPrefixOf, intercalate)
 
 import Hmud.Item
@@ -14,40 +15,43 @@ import Hmud.TestData
 import Hmud.Commands
 
 -- The bot's JID is "bot@example.com"
-botUsername = "oracle"
+botUsername = "markus.klinik"
 botServer = "localhost"
 botPassword = "abc"
-botResource = "hmud"
+botResource = homepageURL
+homepageURL = "https://github.com/mklinik/hmud"
 
 stepToStdout = stepWorld putStrLn
 
 main :: IO ()
-main = withSocketsDo $
-  do
-    -- Connect to server...
-    c <- openStream botServer
-    getStreamStart c
+main = withSocketsDo $ do
+  -- Connect to server...
+  c <- openStream botServer
+  getStreamStart c
 
-    runXMPP c $ do
-    -- ...authenticate...
-    startAuth botUsername botServer botPassword botResource
-    sendPresence Nothing Nothing
-    -- ...and do something.
+  runXMPP c $ do
+  -- ...authenticate...
+  startAuth botUsername botServer botPassword botResource
+  sendPresence (Just ("", [homepageURL, ""])) Nothing
+  handleVersion "hmud" "0.1" "Linux"
+  -- ...and do something.
 
-    player <- liftIO $ randomCharacter "Markus"
-    npc1 <- liftIO $ randomCharacter "Martin"
-    npc2 <- liftIO $ randomCharacter "Karin"
-    npc3 <- liftIO $ randomCharacter "Kathy"
+  joinGroupchat "oracle" "gtf@conference.localhost" Nothing
 
-    w2 <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
-    w3 <- liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
-    w4 <- liftIO $ stepToStdout w3 (insert npc2 "The Black Unicorn")
-    w5 <- liftIO $ stepToStdout w4 (insert npc3 "town square")
-    w6 <- liftIO $ stepToStdout w5 (insertItem scroll0 "ivory tower")
-    w7 <- liftIO $ stepToStdout w6 (insertItem beer "The Black Unicorn")
-    w8 <- liftIO $ stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
+  player <- liftIO $ randomCharacter "Markus"
+  npc1 <- liftIO $ randomCharacter "Martin"
+  npc2 <- liftIO $ randomCharacter "Karin"
+  npc3 <- liftIO $ randomCharacter "Kathy"
 
-    run "Markus" w8
+  w2 <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
+  w3 <- liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
+  w4 <- liftIO $ stepToStdout w3 (insert npc2 "The Black Unicorn")
+  w5 <- liftIO $ stepToStdout w4 (insert npc3 "town square")
+  w6 <- liftIO $ stepToStdout w5 (insertItem scroll0 "ivory tower")
+  w7 <- liftIO $ stepToStdout w6 (insertItem beer "The Black Unicorn")
+  w8 <- liftIO $ stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
+
+  run "Markus" w8
 
 run :: String -> World -> XMPP ()
 run playerName world = do
