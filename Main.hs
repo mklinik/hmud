@@ -44,6 +44,7 @@ commands =
   , ("put", put)
   , ("forge", forge)
   , ("discard", discard)
+  , ("give", give)
   ]
 
 dispatch :: String -> [String] -> Maybe WorldAction

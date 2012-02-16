@@ -119,3 +119,27 @@ discard playerName args world =
   of
     Left err     -> (world, err)
     Right (w, i) -> (w, "You discard " ++ (name i))
+
+-- syntax: give <item-name> to <player-name>
+give :: String -> [String] -> WorldAction
+give playerName args world =
+  let (itName_, receiverName_) = span (\x -> x /= "to") args
+  in
+    if (length itName_ > 0 && length receiverName_ > 1)
+      then let receiverName = unwords $ tail receiverName_
+               itName = unwords itName_
+           in
+             case do char <- findCharacterExactly playerName world
+                     room <- findRoomOfPlayerExactly playerName world
+                     receiver <- findCharacter receiverName room
+                     if char == receiver then Left "You give the item to yourself." else do
+                         (newChar, item) <- removeItemFromInventory itName char
+                         let newReceiver = giveItemToCharacter item receiver
+                         tmpRoom <- updateCharInRoom newChar room
+                         newRoom <- updateCharInRoom newReceiver tmpRoom
+                         newWorld <- updateRoomInWorld newRoom world
+                         Right (newWorld, newReceiver, item)
+             of
+               Left err -> (world, err)
+               Right (w, recv, item)  -> (w, "You give " ++ (name item) ++ " to " ++ (name recv))
+      else (world, "usage: give <item-name> to <player-name>")
