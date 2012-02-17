@@ -7,7 +7,7 @@ import qualified Control.Monad.Error
 import Hmud.Describable
 import Hmud.Item
 
-data Race = Human | Elven | Dwarf
+data Race = Human | Elven | Dwarven
   deriving (Eq, Show, Enum, Bounded)
 
 data Role = Fool
@@ -21,6 +21,7 @@ data Role = Fool
           | Warrior
           | Knight
           | Wizard
+          | Necromancer
           | Prince
           | King
   deriving (Eq, Show, Enum, Bounded)
@@ -38,6 +39,7 @@ genderedRoles =
   , (Warrior,    ("Warrior",     "Warrior"))
   , (Knight,     ("Knight",      "Knight"))
   , (Wizard,     ("Wizard",      "Wizard") )
+  , (Necromancer,("Necromancer", "Necromancer"))
   , (Prince,     ("Prince",      "Princess"))
   , (King,       ("King",        "Queen"))
   ]
