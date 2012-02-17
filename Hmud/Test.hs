@@ -104,7 +104,7 @@ specs = descriptions
       (jid2player "markus.klinik@localhost/Gajim" == "Markus Klinik")
     ]
   , describe "updateNick"
-    [ it "foobars"
+    [ it "works when a second mapping is added"
       ( TestCase $ do
           let (nicks, _) = updateNick "foobar" "markus.klinik@localhost/Gajim" (Map.empty, Map.empty)
           assertBool "foobar is mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks) == "markus.klinik@localhost/Gajim"
