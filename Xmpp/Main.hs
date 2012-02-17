@@ -64,14 +64,14 @@ type UserNameMap = (Nick2JidMap, Jid2PlayerMap)
 -- TODO "markus.klinik@jabber.ccc.de/foobar" -> "Markus Klinik"
 -- for now: "markus.klinik@jabber.ccc.de/foobar" -> "markus.klinik"
 jid2player :: String -> String
-jid2player jid = if "gtf@conference" `isPrefixOf` jid
+jid2player jid = unwords $ map capitalize $ wordsPunct $ if "gtf@conference" `isPrefixOf` jid
   then (getResource jid)
   else (getUsername jid)
 
 updateNick :: String -> String -> UserNameMap -> UserNameMap
 updateNick nick jid (nicks, users) = (Map.insert nick jid $ Map.filter ((==) jid) nicks, users)
 
--- returns (Just newPlayerName, UserNameMap) when there was no such player
+-- returns (True, UserNameMap) when there was no such player
 updatePlayerName :: String -> UserNameMap -> (Bool, UserNameMap)
 updatePlayerName jid (nicks, users) = (isNewUser, (nicks, newUsers))
   where isNewUser = Map.notMember jid users

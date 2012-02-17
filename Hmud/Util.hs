@@ -3,6 +3,7 @@ module Hmud.Util where
 
 import qualified Random
 import Hmud.Character
+import Data.Char
 
 randomEnum :: forall a. (Enum a, Bounded a) => IO a
 randomEnum = do
@@ -24,3 +25,15 @@ randomCharacter name = do
                    , charLevel = level
                    , charInventory = []
                    }
+
+-- like words, put use  to split instead of whitespace
+wordsPunct :: String -> [String]
+wordsPunct [] = []
+wordsPunct input = nextWord : wordsPunct remaining
+  where tmp = dropWhile (not . isLetter) input
+        nextWord = takeWhile isLetter tmp
+        remaining = dropWhile isLetter tmp
+
+capitalize :: String -> String
+capitalize [] = []
+capitalize (c:cs) = (toUpper c):cs
