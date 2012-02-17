@@ -178,8 +178,9 @@ commands =
   , ("give", give)
   ]
 
-dispatch :: String -> [String] -> Maybe WorldAction
-dispatch playerName tokens = do
+dispatch :: Maybe String -> [String] -> Maybe WorldAction
+dispatch Nothing tokens = Just $ idWorldAction "Sorry, you don't have a character."
+dispatch (Just playerName) tokens = do
   case tokens of
     []             -> Nothing
     (command:args) -> case (filter (\c -> command `isPrefixOf` (fst c)) commands) of

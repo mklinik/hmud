@@ -5,11 +5,14 @@ import Test.Hspec
 import Test.HUnit
 import Data.Maybe (fromJust)
 import Data.Either.Unwrap
+import qualified Data.Map as Map
+import Data.Map (Map)
 
 import Hmud.World
 import Hmud.Character
 import Hmud.Room
 import Hmud.TestData
+import Xmpp.Users
 
 player0 = Character
   { charName = "player0"
@@ -92,6 +95,25 @@ specs = descriptions
                   assertBool "player not found" $ isLeft (findCharacterExactly "pla" w2)
       )
     ]
+
+  -- Xmpp.Users
+  , describe "jid2player"
+    [ it "returns the capitalized resource for conference JIDs"
+      (jid2player "gtf@conference.localhost/markus.klinik" == "Markus Klinik")
+    , it "returns the capitalized username for personal JIDs"
+      (jid2player "markus.klinik@localhost/Gajim" == "Markus Klinik")
+    ]
+  , describe "updateNick"
+    [ it "foobars"
+      ( TestCase $ do
+          let (nicks, _) = updateNick "foobar" "markus.klinik@localhost/Gajim" (Map.empty, Map.empty)
+          assertBool "foobar is mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks) == "markus.klinik@localhost/Gajim"
+          let (nicks2, _) = updateNick "blah" "hans.wurst@localhost/Gajim" (nicks, Map.empty)
+          assertBool "foobar is still mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks2) == "markus.klinik@localhost/Gajim"
+          assertBool "blah is still mapped to hans" $ (fromJust $ Map.lookup "blah" nicks2) == "hans.wurst@localhost/Gajim"
+      )
+    ]
+
   ]
 
 main = hspec specs
