@@ -28,11 +28,11 @@ insertItem item toName world =
     Left err -> (world, MsgInfo err)
     Right w  -> (w, MsgInfo $ (name item) ++ " is now in " ++ toName)
 
-goto :: String -> [String] -> WorldAction
-goto playerName args world =
-  case findRoomOfPlayerExactly playerName world of
+goto :: Address -> [String] -> WorldAction
+goto playerId args world =
+  case findRoomOfPlayerExactly playerId world of
     Left err -> (world, MsgInfo err)
-    Right r  -> case gotoFromTo playerName (name r) arg world of
+    Right r  -> case gotoFromTo playerId (name r) arg world of
                     Left err        -> (world, MsgInfo err)
                     Right (w, fromRoom, char, toRoom) -> (w, MsgGoto fromRoom char toRoom)
   where arg = unwords args
@@ -42,65 +42,65 @@ goto playerName args world =
 -- otherwise, try to find something to describe in the following order:
 --   1) a character in the room
 --   2) an item in the room
---   3) an item in the current players inventory (TODO)
-describeThing :: Room -> String -> String -> String
+--   3) an item in the current players inventory
+describeThing :: Room -> String -> Address -> String
 describeThing room [] _ = "This is " ++ (name room) ++ ", " ++ (describe room)
-describeThing room arg playerName =
+describeThing room arg playerId =
   case findCharacter arg room of
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
     Left err ->
       case findItemInRoom arg room of
         Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
-        Left err -> case findCharacterInRoomExactly playerName room of
+        Left err -> case findCharacterInRoomExactly playerId room of
           Right p  -> case characterFindItem arg p of
             Right i  -> "You see " ++ (name i) ++ ", " ++ (describe i)
             Left err -> "you can't see " ++ arg
           Left err -> "you can't see " ++ arg
 
-lookAt :: String -> [String] -> WorldAction
-lookAt playerName args world =
-  case findRoomOfPlayerExactly playerName world of
+lookAt :: Address -> [String] -> WorldAction
+lookAt playerId args world =
+  case findRoomOfPlayerExactly playerId world of
     Left err -> (world, MsgInfo err)
-    Right r  -> (world, MsgInfo $ describeThing r (unwords args) playerName)
+    Right r  -> (world, MsgInfo $ describeThing r (unwords args) playerId)
 
-inventory :: String -> [String] -> WorldAction
-inventory playerName _ world = case findCharacterExactly playerName world of
+inventory :: Address -> [String] -> WorldAction
+inventory playerId _ world = case findCharacterExactly playerId world of
   Left err   -> (world, MsgInfo err)
   Right char -> (world, MsgInfo $ if null $ charInventory char
                           then "Your bag of swag is empty."
                           else "Your possessions: " ++ (intercalate ", " $ map name (charInventory char))
                 )
 
-pickup :: String -> [String] -> WorldAction
-pickup playerName [] world =
+pickup :: Address -> [String] -> WorldAction
+pickup playerId [] world =
     (world, MsgInfo $ "You take nothing.")
-pickup playerName args world =
-  case characterPickupItem playerName (unwords args) world of
+pickup playerId args world =
+  case characterPickupItem playerId (unwords args) world of
     Left err     -> (world, MsgInfo err)
     Right (w, i) -> (w, MsgInfo $ "You take " ++ (name i))
 
-put :: String -> [String] -> WorldAction
-put playerName [] world =
+put :: Address -> [String] -> WorldAction
+put playerId [] world =
     (world, MsgInfo "You drop nothing.")
-put playerName args world =
-  case characterPutItem playerName (unwords args) world of
+put playerId args world =
+  case characterPutItem playerId (unwords args) world of
     Left err     -> (world, MsgInfo err)
     Right (w, i) -> (w, MsgInfo $ "You drop " ++ (name i))
 
-forge :: String -> [String] -> WorldAction
-forge playerName args world =
+forge :: Address -> [String] -> WorldAction
+forge playerId args world =
   let (name_, desc_) = span (\x -> x /= "$") args
   in
     if (length name_ > 0 && length desc_ > 1)
       then let description = unwords $ tail desc_
                itName = unwords name_
            in
-             case do char <- findCharacterExactly playerName world
+             case do char <- findCharacterExactly playerId world
                      _ <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
                      let newChar = giveItemToCharacter
                                      (Item { itemName = itName, itemDescription = description })
                                      char
-                     room <- findRoomOfPlayerExactly playerName world
+                     room <- findRoomOfPlayerExactly playerId world
                      newRoom <- updateCharInRoom newChar room
                      updateRoomInWorld newRoom world
              of
@@ -108,13 +108,13 @@ forge playerName args world =
                Right w  -> (w, MsgInfo $ "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands.")
       else (world, MsgInfo $ "usage: forge <item-name> $ <item-description>")
 
-discard :: String -> [String] -> WorldAction
-discard playerName [] world = do
+discard :: Address -> [String] -> WorldAction
+discard playerId [] world = do
     (world, MsgInfo "You discard nothing.")
-discard playerName args world =
+discard playerId args world =
   case do
-    oldRoom <- findRoomOfPlayerExactly playerName world
-    oldChar <- findCharacterInRoomExactly playerName oldRoom
+    oldRoom <- findRoomOfPlayerExactly playerId world
+    oldChar <- findCharacterInRoomExactly playerId oldRoom
     (newChar, item) <- removeItemFromInventory (unwords args) oldChar
     newRoom <- updateCharInRoom newChar oldRoom
     newWorld <- updateRoomInWorld newRoom world
@@ -124,16 +124,16 @@ discard playerName args world =
     Right (w, i) -> (w, MsgInfo $ "You discard " ++ (name i))
 
 -- syntax: give <item-name> to <player-name>
-give :: String -> [String] -> WorldAction
-give playerName args world =
+give :: Address -> [String] -> WorldAction
+give playerId args world =
   let (itName_, receiverName_) = span (\x -> x /= "to") args
   in
     if (length itName_ > 0 && length receiverName_ > 1)
       then let receiverName = unwords $ tail receiverName_
                itName = unwords itName_
            in
-             case do char <- findCharacterExactly playerName world
-                     room <- findRoomOfPlayerExactly playerName world
+             case do char <- findCharacterExactly playerId world
+                     room <- findRoomOfPlayerExactly playerId world
                      receiver <- findCharacter receiverName room
                      if char == receiver then Left "You give the item to yourself." else do
                          (newChar, item) <- removeItemFromInventory itName char
@@ -169,7 +169,7 @@ stepWorld deliver world action = do
   deliver message
   return newWorld
 
-commands :: [(String, String -> [String] -> WorldAction)]
+commands :: [(String, Address -> [String] -> WorldAction)]
 commands =
   [ ("lookat", lookAt)
   , ("goto", goto)
@@ -181,14 +181,14 @@ commands =
   , ("give", give)
   ]
 
-dispatch :: Maybe String -> [String] -> Maybe WorldAction
+dispatch :: Maybe Address -> [String] -> Maybe WorldAction
 dispatch Nothing tokens = Just $ idWorldAction "Sorry, you don't have a character."
-dispatch (Just playerName) tokens = do
+dispatch (Just playerId) tokens = do
   case tokens of
     []             -> Nothing
     (command:args) -> case (filter (\c -> command `isPrefixOf` (fst c)) commands) of
       []   -> Just $ idWorldAction $ "no such command: " ++ command
-      c:[] -> Just $ (snd c) playerName args
+      c:[] -> Just $ (snd c) playerId args
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
                      ++ (intercalate ", " $ map fst cs)
 

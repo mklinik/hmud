@@ -21,7 +21,7 @@ player0 = Character
   , charGender = Female
   , charLevel = 1
   , charInventory = []
-  , charAddress = Address ""
+  , charAddress = Address "player0addr"
   }
 
 emptyWorld = World { worldRooms = [] }
@@ -49,51 +49,47 @@ specs = descriptions
 
   , describe "gotoFromTo"
     [ it "returns Nothing if there is no such *from* room"
-        (either (const True) (const False) $ gotoFromTo "player0" "what where?" "The Black Unicorn" world)
+        (either (const True) (const False) $ gotoFromTo (Address "player0addr") "what where?" "The Black Unicorn" world)
     , it "returns Nothing if there is no such *to* room"
-        (either (const True) (const False) $ gotoFromTo "player0" "The Black Unicorn" "what where?" world)
+        (either (const True) (const False) $ gotoFromTo (Address "player0addr") "The Black Unicorn" "what where?" world)
     , it "returns Nothing if there is no such character in the *from* room"
-        (either (const True) (const False) $ gotoFromTo "slayer0" "The Black Unicorn" "town square" world)
+        (either (const True) (const False) $ gotoFromTo (Address "slayer0") "The Black Unicorn" "town square" world)
     , it "works when everything is fine"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  let (w3, _, _, _) = fromRight $ gotoFromTo "player0" "The Black Unicorn" "town square" w2
+                  let (w3, _, _, _) = fromRight $ gotoFromTo (Address "player0addr") "The Black Unicorn" "town square" w2
                   let fromRoom = fromRight $ findRoom "The Black Unicorn" w3
                   let toRoom   = fromRight $ findRoom "town square" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player0" fromRoom)
                   assertEqual "player is now in *toRoom*" (Right player0) (findCharacter "player0" toRoom)
       )
-    , it "works with abbreviated names"
+    , it "does not work with abbreviated names"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black" world
-                  let (w3, _, _, _) = fromRight $ gotoFromTo "pl" "Th" "to" w2
-                  let fromRoom = fromRight $ findRoom "The Blac" w3
-                  let toRoom   = fromRight $ findRoom "tow" w3
-                  assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player" fromRoom)
-                  assertEqual "player is now in *toRoom*" (Right player0) (findCharacter "play" toRoom)
+                  assertBool "no such player pl" $ isLeft $ gotoFromTo (Address "pl") "Th" "to" w2
       )
     , it "fails when trying to go to the same room again"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo "player0" "The Black" "The Black Un" w2
+                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo (Address "player0addr") "The Black" "The Black Un" w2
       )
     ]
   , describe "findCharacterExactly"
     [ it "succeeds when everything is fine"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  assertEqual "player found" (Right player0) (findCharacterExactly "player0" w2)
-                  assertBool "player not found" $ isLeft (findCharacterExactly "slayer0" w2)
+                  assertEqual "player found" (Right player0) (findCharacterExactly (Address "player0addr") w2)
+                  assertBool "player not found" $ isLeft (findCharacterExactly (Address "slayer0") w2)
       )
     , it "fails in the empty world"
       (TestCase $ do
-                  assertBool "player not found" $ isLeft (findCharacterExactly "player0" emptyWorld)
-                  assertBool "player not found" $ isLeft (findCharacterExactly "slayer0" emptyWorld)
+                  assertBool "player not found" $ isLeft (findCharacterExactly (Address "player0addr") emptyWorld)
+                  assertBool "player not found" $ isLeft (findCharacterExactly (Address "slayer0") emptyWorld)
       )
     , it "fails with partial names"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  assertBool "player not found" $ isLeft (findCharacterExactly "pla" w2)
+                  assertBool "player not found" $ isLeft (findCharacterExactly (Address "pla") w2)
       )
     ]
 

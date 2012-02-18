@@ -47,16 +47,16 @@ findCharacter :: String -> Room -> Either String Character
 findCharacter playerName room = maybe (Left $ "no character " ++ playerName ++ " in " ++ (roomName room)) Right
   $ find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters room)
 
-findCharacterInRoomExactly :: String -> Room -> Either String Character
-findCharacterInRoomExactly playerName room =
+findCharacterInRoomExactly :: Address -> Room -> Either String Character
+findCharacterInRoomExactly playerId room =
   maybe
-    (Left $ "no character " ++ playerName ++ " in " ++ (roomName room))
+    (Left $ "no character " ++ (show playerId) ++ " in " ++ (roomName room))
     Right
-    (find (\char -> playerName == (charName char)) (roomCharacters room))
+    (find (\char -> playerId == (charAddress char)) (roomCharacters room))
 
-roomHasCharacterExactly :: String -> Room -> Bool
-roomHasCharacterExactly chName room =
-  either (const False) (const True) $ findCharacterInRoomExactly chName room
+roomHasCharacterExactly :: Address -> Room -> Bool
+roomHasCharacterExactly playerId room =
+  either (const False) (const True) $ findCharacterInRoomExactly playerId room
 
 roomEnter :: Character -> Room -> Room
 roomEnter char room = room { roomCharacters = char:(roomCharacters room) }
@@ -81,5 +81,5 @@ removeItemFromRoom itName room = do
 
 updateCharInRoom :: Character -> Room -> Either String Room
 updateCharInRoom newChar room = do
-  oldChar <- findCharacterInRoomExactly (name newChar) room
+  oldChar <- findCharacterInRoomExactly (charAddress newChar) room
   Right $ room { roomCharacters = newChar : (delete oldChar (roomCharacters room)) }

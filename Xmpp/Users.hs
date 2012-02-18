@@ -7,6 +7,7 @@ import Network.XMPP.MUC
 import Data.List (isPrefixOf)
 
 import Hmud.Util
+import Hmud.Character
 
 type Nick2JidMap = Map String String
 type Jid2PlayerMap = Map String String
@@ -34,7 +35,7 @@ getPlayerFromNick nick (nicks, users) = do
 getPlayerFromJid :: String -> UserNameMap -> Maybe String
 getPlayerFromJid jid (_, users) = Map.lookup jid users
 
-getPlayerFromNickOrJid :: String -> UserNameMap -> Maybe String
+getPlayerFromNickOrJid :: String -> UserNameMap -> Maybe Address
 getPlayerFromNickOrJid nickOrJid map = if "gtf@conference" `isPrefixOf` nickOrJid
-  then getPlayerFromNick (getResource nickOrJid) map
-  else getPlayerFromJid nickOrJid map
+  then Just $ Address nickOrJid
+  else Nothing

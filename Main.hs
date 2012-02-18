@@ -33,6 +33,6 @@ main = do
   w7 <- stepToStdout w6 (insertItem beer "The Black Unicorn")
   w8 <- stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
 
-  loopWithWorld (Just "Markus") w8
+  loopWithWorld (Just $ Address "player") w8
 
   putStrLn "bye."

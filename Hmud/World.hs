@@ -33,15 +33,15 @@ insertItemToRoom item toName world = do
   return world { worldRooms = newToRoom:remainingRooms }
 
 -- may fail for various obvious reasons
-gotoFromTo :: String -> String -> String -> World -> Either String (World, Room, Character, Room)
-gotoFromTo playerName fromName toName world = do
+gotoFromTo :: Address -> String -> String -> World -> Either String (World, Room, Character, Room)
+gotoFromTo playerId fromName toName world = do
       fromRoom <- findRoom fromName world
       toRoom   <- findRoom toName world
       if fromRoom == toRoom
         then (Left "You are already there.")
         else do
           let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
-          player <- findCharacter playerName fromRoom
+          player <- findCharacterInRoomExactly playerId fromRoom
           let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
           let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
           Right (world { worldRooms = newFromRoom:newToRoom:remainingRooms }, newFromRoom, player, newToRoom)
@@ -49,25 +49,25 @@ gotoFromTo playerName fromName toName world = do
 worldSummary :: World -> String
 worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))
 
-findRoomOfPlayerExactly :: String -> World -> Either String Room
-findRoomOfPlayerExactly playerName world =
-  case filter (roomHasCharacterExactly playerName) (worldRooms world) of
-    []        -> Left $ "no such character: " ++ playerName
+findRoomOfPlayerExactly :: Address -> World -> Either String Room
+findRoomOfPlayerExactly playerId world =
+  case filter (roomHasCharacterExactly playerId) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ (show playerId)
     r:[]      -> Right r
-    otherwise -> Left $ "ambiguous character name: " ++ playerName -- should never happen
+    otherwise -> Left $ "ambiguous character name: " ++ (show playerId) -- should never happen
 
 -- Assuming that player names are unique, if we find any players at all, we only find one
-findCharacterExactly :: String -> World -> Either String Character
-findCharacterExactly playerName world =
-  case rights $ map (findCharacterInRoomExactly playerName) (worldRooms world) of
-    []        -> Left $ "no such character: " ++ playerName
+findCharacterExactly :: Address -> World -> Either String Character
+findCharacterExactly playerId world =
+  case rights $ map (findCharacterInRoomExactly playerId) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ (show playerId)
     p:[]      -> Right p
-    otherwise -> Left $ "ambiguous character name: " ++ playerName
+    otherwise -> Left $ "ambiguous character name: " ++ (show playerId)
 
-characterPickupItem :: String -> String -> World -> Either String (World, Item)
-characterPickupItem chName itName world = do
-  oldRoom <- findRoomOfPlayerExactly chName world
-  oldChar <- findCharacterInRoomExactly chName oldRoom
+characterPickupItem :: Address -> String -> World -> Either String (World, Item)
+characterPickupItem playerId itName world = do
+  oldRoom <- findRoomOfPlayerExactly playerId world
+  oldChar <- findCharacterInRoomExactly playerId oldRoom
   (tmpRoom, item) <- removeItemFromRoom itName oldRoom
   let newChar = giveItemToCharacter item oldChar
   newRoom <- updateCharInRoom newChar tmpRoom
@@ -79,10 +79,10 @@ updateRoomInWorld newRoom world = do
   oldRoom <- findRoom (name newRoom) world
   Right $ world { worldRooms = newRoom : (delete oldRoom (worldRooms world)) }
 
-characterPutItem :: String -> String -> World -> Either String (World, Item)
-characterPutItem chName itName world = do
-  oldRoom <- findRoomOfPlayerExactly chName world
-  oldChar <- findCharacterInRoomExactly chName oldRoom
+characterPutItem :: Address -> String -> World -> Either String (World, Item)
+characterPutItem playerId itName world = do
+  oldRoom <- findRoomOfPlayerExactly playerId world
+  oldChar <- findCharacterInRoomExactly playerId oldRoom
   (newChar, item) <- removeItemFromInventory itName oldChar
   newRoom <- updateCharInRoom newChar oldRoom
   tmpWorld <- updateRoomInWorld newRoom world
