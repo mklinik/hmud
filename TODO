@@ -1,5 +1,6 @@
 - find a way to connect to server via SSL, possibly by patching XMPP.openStream
   to take a handle, which you connect to ncat before
+
 - map jabber IDs to player names: messages may come from
  - the groupchat: gtf@conference.localhost/markus.klinik
  - direct chat: markus.klinik@localhost/Gajim
@@ -18,3 +19,6 @@
 - How can I have one thread handle different kinds of stanzas?
  - wait for any stanza with (const True)
  - dispatch yourself
+
+- send personalized messages to all players in a room when something
+  interesting happens
