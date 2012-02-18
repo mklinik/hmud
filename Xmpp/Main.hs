@@ -100,8 +100,8 @@ stepToXmpp sender = stepWorld (\msg -> do
   case msg of
     MsgInfo m ->
       sendMessage sender m
-    MsgGoto char room ->
-      sendMessage sender $ (name char) ++ " goes to " ++ (name room)
+    MsgGoto fromRoom char toRoom ->
+      sendMessage sender $ (name char) ++ " goes to " ++ (name toRoom)
     MsgTake char item ->
       sendMessage sender $ (name char) ++ " takes " ++ (name item)
     MsgPut char item ->

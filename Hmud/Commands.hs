@@ -34,7 +34,7 @@ goto playerName args world =
     Left err -> (world, MsgInfo err)
     Right r  -> case gotoFromTo playerName (name r) arg world of
                     Left err        -> (world, MsgInfo err)
-                    Right (w, room) -> (w, MsgInfo $ "You are now in " ++ (name room) ++ ", " ++ (describe room))
+                    Right (w, fromRoom, char, toRoom) -> (w, MsgGoto fromRoom char toRoom)
   where arg = unwords args
 
 -- find something to describe in the given room
@@ -196,7 +196,7 @@ stepToStdout = stepWorld (\msg -> do
   case msg of
     MsgInfo m ->
       putStrLn m
-    MsgGoto char room ->
+    MsgGoto _ char room ->
       putStrLn $ (name char) ++ " goes to " ++ (name room)
     MsgTake char item ->
       putStrLn $ (name char) ++ " takes " ++ (name item)

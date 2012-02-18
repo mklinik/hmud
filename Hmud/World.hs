@@ -33,7 +33,7 @@ insertItemToRoom item toName world = do
   return world { worldRooms = newToRoom:remainingRooms }
 
 -- may fail for various obvious reasons
-gotoFromTo :: String -> String -> String -> World -> Either String (World, Room)
+gotoFromTo :: String -> String -> String -> World -> Either String (World, Room, Character, Room)
 gotoFromTo playerName fromName toName world = do
       fromRoom <- findRoom fromName world
       toRoom   <- findRoom toName world
@@ -44,7 +44,7 @@ gotoFromTo playerName fromName toName world = do
           player <- findCharacter playerName fromRoom
           let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
           let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
-          Right (world { worldRooms = newFromRoom:newToRoom:remainingRooms }, newToRoom)
+          Right (world { worldRooms = newFromRoom:newToRoom:remainingRooms }, newFromRoom, player, newToRoom)
 
 worldSummary :: World -> String
 worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))

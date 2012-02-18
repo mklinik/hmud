@@ -11,7 +11,7 @@ import Hmud.Item
 -- * take, put and give messages are sent to all players of the current room
 data Message =
     MsgInfo String
-  | MsgGoto Character Room
+  | MsgGoto Room Character Room
   | MsgTake Character Item
   | MsgPut Character Item
   | MsgGive Character Item Character
