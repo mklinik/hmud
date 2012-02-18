@@ -3,7 +3,7 @@ module Hmud.Test where
 import Test.Hspec.HUnit
 import Test.Hspec
 import Test.HUnit
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isNothing)
 import Data.Either.Unwrap
 import qualified Data.Map as Map
 import Data.Map (Map)
@@ -110,7 +110,10 @@ specs = descriptions
           assertBool "foobar is mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks) == "markus.klinik@localhost/Gajim"
           let (nicks2, _) = updateNick "blah" "hans.wurst@localhost/Gajim" (nicks, Map.empty)
           assertBool "foobar is still mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks2) == "markus.klinik@localhost/Gajim"
-          assertBool "blah is still mapped to hans" $ (fromJust $ Map.lookup "blah" nicks2) == "hans.wurst@localhost/Gajim"
+          assertBool "blah is mapped to hans" $ (fromJust $ Map.lookup "blah" nicks2) == "hans.wurst@localhost/Gajim"
+          let (nicks3, _) = updateNick "mkl" "markus.klinik@localhost/Gajim" (nicks2, Map.empty)
+          assertBool "markus has now nick mkl" $ (fromJust $ Map.lookup "mkl" nicks3) == "markus.klinik@localhost/Gajim"
+          assertBool "nick foobar no longer exists" $ (isNothing $ Map.lookup "foobar" nicks3)
       )
     ]
 
