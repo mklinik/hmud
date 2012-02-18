@@ -35,6 +35,7 @@ npc0 = Character
   , charGender = Male
   , charLevel = 17
   , charInventory = []
+  , charAddress = Address ""
   }
 
 world = World { worldRooms = [tavern, townSquare, ivoryTower] }

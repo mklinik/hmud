@@ -12,8 +12,8 @@ randomEnum = do
   randomInt <- Random.randomRIO (minBoundInt, maxBoundInt)
   return $ toEnum randomInt
 
-randomCharacter :: String -> IO Character
-randomCharacter name = do
+randomCharacter :: String -> Address -> IO Character
+randomCharacter name addr = do
   race <- randomEnum
   role <- randomEnum
   gender <- randomEnum
@@ -24,6 +24,7 @@ randomCharacter name = do
                    , charGender = gender
                    , charLevel = level
                    , charInventory = []
+                   , charAddress = addr
                    }
 
 -- like words, put use  to split instead of whitespace

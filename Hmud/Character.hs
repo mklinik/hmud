@@ -7,6 +7,9 @@ import qualified Control.Monad.Error
 import Hmud.Describable
 import Hmud.Item
 
+newtype Address = Address String
+  deriving (Eq, Show)
+
 data Race = Human | Elven | Dwarven
   deriving (Eq, Show, Enum, Bounded)
 
@@ -54,6 +57,7 @@ data Character = Character
   , charGender :: Gender
   , charLevel :: Int
   , charInventory :: [Item]
+  , charAddress :: Address
   }
   deriving Eq
 

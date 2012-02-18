@@ -42,10 +42,10 @@ main = withSocketsDo $ do
 
   joinGroupchat "oracle" groupchatJID Nothing
 
-  player <- liftIO $ randomCharacter "Markus"
-  npc1 <- liftIO $ randomCharacter "Martin"
-  npc2 <- liftIO $ randomCharacter "Karin"
-  npc3 <- liftIO $ randomCharacter "Kathy"
+  player <- liftIO $ randomCharacter "Markus" $ Address ""
+  npc1 <- liftIO $ randomCharacter "Martin" $ Address ""
+  npc2 <- liftIO $ randomCharacter "Karin" $ Address ""
+  npc3 <- liftIO $ randomCharacter "Kathy" $ Address ""
 
   w2 <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
   w3 <- liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
@@ -74,7 +74,8 @@ run userNames@(nicks, users) world = do
     -- * maintain nick -> jid mapping
     -- * maintain jid -> player name mapping
     -- * greet users as they join (any RoleChange must do for us)
-    liftIO $ putStrLn $ "got groupchat presence from: " ++ (maybe "" id (getAttr "from" msg))
+    let sender = maybe "" id (getAttr "from" msg)
+    liftIO $ putStrLn $ "got groupchat presence from: " ++ sender
     let (presence, occupant) = doGroupchatPresence msg
     (newUserNames, newWorld) <- case presence of
       RoleChange _ -> -- a user has joined or changed nick
@@ -86,7 +87,7 @@ run userNames@(nicks, users) world = do
               let (isNewUser, newUserNames) = updatePlayerName jid $ updateNick (occNick occupant) jid userNames
                 in if isNewUser
                     then do
-                      player <- liftIO $ randomCharacter (jid2player jid)
+                      player <- liftIO $ randomCharacter (jid2player jid) $ Address sender
                       newWorld <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
                       sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
                       return (newUserNames, newWorld)

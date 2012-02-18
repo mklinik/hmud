@@ -21,6 +21,7 @@ player0 = Character
   , charGender = Female
   , charLevel = 1
   , charInventory = []
+  , charAddress = Address ""
   }
 
 emptyWorld = World { worldRooms = [] }

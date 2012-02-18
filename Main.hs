@@ -20,10 +20,10 @@ loopWithWorld playerName world = do
                   loopWithWorld playerName w2
 
 main = do
-  player <- randomCharacter "Markus"
-  npc1 <- randomCharacter "Martin"
-  npc2 <- randomCharacter "Karin"
-  npc3 <- randomCharacter "Kathy"
+  player <- randomCharacter "Markus" $ Address "player"
+  npc1 <- randomCharacter "Martin" $ Address ""
+  npc2 <- randomCharacter "Karin" $ Address ""
+  npc3 <- randomCharacter "Kathy" $ Address ""
 
   w2 <- stepToStdout world (insert player "The Black Unicorn")
   w3 <- stepToStdout w2 (insert npc1 "The Black Unicorn")
