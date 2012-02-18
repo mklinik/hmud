@@ -62,42 +62,49 @@ run userNames@(nicks, users) world = do
   -- Wait for an incoming message...
   msg <- waitForStanza (const True)
   if (isChat `conj` hasBody) msg then do
-    let sender = maybe "" id (getAttr "from" msg)
+    let sender = fmap Address (getAttr "from" msg) -- Maybe Address
         tokens = words $ maybe "" id (getMessageBody msg)
-    liftIO $ putStrLn $ "got message from " ++ sender
-    case dispatch (getPlayerFromNickOrJid sender userNames) tokens of
+    liftIO $ putStrLn $ "got message from " ++ (maybe "" show sender)
+    case sender of
       Nothing -> run userNames world
-      Just a  -> do
-        w2 <- (stepToXmpp sender) world a
-        run userNames w2
+      Just playerId ->
+        case dispatch playerId tokens of
+          Nothing -> run userNames world
+          Just a  -> do
+            w2 <- (stepToXmpp playerId) world a
+            run userNames w2
   else if isGroupchatPresence msg then do
     -- * maintain nick -> jid mapping
     -- * maintain jid -> player name mapping
     -- * greet users as they join (any RoleChange must do for us)
-    let sender = maybe "" id (getAttr "from" msg)
-    liftIO $ putStrLn $ "got groupchat presence from: " ++ sender
-    let (presence, occupant) = doGroupchatPresence msg
-    (newUserNames, newWorld) <- case presence of
-      RoleChange _ -> -- a user has joined or changed nick
-        case occJid occupant of
-          Nothing -> return (userNames, world) -- anonymous users don't get a character
-          Just jid -> if (jid == botJID)
-            then return (userNames, world) -- filter presence msg from myself
-            else
-              let (isNewUser, newUserNames) = updatePlayerName jid $ updateNick (occNick occupant) jid userNames
-                in if isNewUser
-                    then do
-                      player <- liftIO $ randomCharacter (jid2player jid) $ Address sender
-                      newWorld <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
-                      sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
-                      return (newUserNames, newWorld)
-                    else return (newUserNames, world)
-      otherwise -> return (userNames, world)
-    run newUserNames newWorld
+    let sender = fmap Address (getAttr "from" msg) -- Maybe Address
+    liftIO $ putStrLn $ "got groupchat presence from: " ++ (maybe "" show sender)
+    case sender of
+      Nothing -> run userNames world -- we got a message without "from"?
+      Just playerId -> do
+        let (presence, occupant) = doGroupchatPresence msg
+        (newUserNames, newWorld) <- case presence of
+          RoleChange _ -> -- a user has joined or changed nick
+            case occJid occupant of
+              Nothing -> return (userNames, world) -- anonymous users don't get a character
+              Just jid -> if (jid == botJID)
+                then return (userNames, world) -- filter presence msg from myself
+                else
+                  let (isNewUser, newUserNames) = updatePlayerName jid $ updateNick (occNick occupant) jid userNames
+                    in if isNewUser
+                        then do
+                          player <- liftIO $ randomCharacter (jid2player jid) playerId
+                          newWorld <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
+                          sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
+                          return (newUserNames, newWorld)
+                        else return (newUserNames, world)
+          otherwise -> return (userNames, world)
+        run newUserNames newWorld
   else do
     run userNames world
 
-stepToXmpp sender = stepWorld (\msg -> do
+stepToXmpp :: Address -> (World -> WorldAction -> XMPP World)
+stepToXmpp (Address sender) = stepWorld (\msg -> do
   case msg of
     MsgInfo m ->
       sendMessage sender m
