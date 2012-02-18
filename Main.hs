@@ -11,8 +11,6 @@ import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
 
-stepToStdout = stepWorld putStrLn
-
 loopWithWorld playerName world = do
   putStr ">>> "
   tokens <- fmap words getLine

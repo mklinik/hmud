@@ -15,6 +15,7 @@ import Hmud.World
 import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
+import Hmud.Message
 import Xmpp.Users
 
 -- The bot's JID is "bot@example.com"
@@ -25,8 +26,6 @@ botResource = "oracle"
 homepageURL = "https://github.com/mklinik/hmud"
 groupchatJID = "gtf@conference.localhost"
 botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
-
-stepToStdout = stepWorld putStrLn
 
 main :: IO ()
 main = withSocketsDo $ do
@@ -69,7 +68,7 @@ run userNames@(nicks, users) world = do
     case dispatch (getPlayerFromNickOrJid sender userNames) tokens of
       Nothing -> run userNames world
       Just a  -> do
-        w2 <- stepWorld (sendMessage sender) world a
+        w2 <- (stepToXmpp sender) world a
         run userNames w2
   else if isGroupchatPresence msg then do
     -- * maintain nick -> jid mapping
@@ -88,7 +87,7 @@ run userNames@(nicks, users) world = do
                 in if isNewUser
                     then do
                       player <- liftIO $ randomCharacter (jid2player jid)
-                      newWorld <- liftIO $ stepWorld (putStrLn) world (insert player "The Black Unicorn")
+                      newWorld <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
                       sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
                       return (newUserNames, newWorld)
                     else return (newUserNames, world)
@@ -96,3 +95,17 @@ run userNames@(nicks, users) world = do
     run newUserNames newWorld
   else do
     run userNames world
+
+stepToXmpp sender = stepWorld (\msg -> do
+  case msg of
+    MsgInfo m ->
+      sendMessage sender m
+    MsgGoto char room ->
+      sendMessage sender $ (name char) ++ " goes to " ++ (name room)
+    MsgTake char item ->
+      sendMessage sender $ (name char) ++ " takes " ++ (name item)
+    MsgPut char item ->
+      sendMessage sender $ (name char) ++ " puts down " ++ (name item)
+    MsgGive giver item receiver ->
+      sendMessage sender $ (name giver) ++ " gives " ++ (name item) ++ " to " ++ (name receiver)
+    )

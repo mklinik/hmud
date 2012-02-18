@@ -7,31 +7,34 @@ import Hmud.World
 import Hmud.Room
 import Hmud.Character
 import Hmud.Item
+import Hmud.Message
 
 data CommandTag = Quit | Other
 
-type WorldAction = World -> (World, String)
+type WorldAction = World -> (World, Message)
 
 idWorldAction :: String -> WorldAction
-idWorldAction text world = (world, text)
+idWorldAction text world = (world, MsgInfo text)
 
+insert :: Character -> String -> WorldAction
 insert player toName world =
   case insertCharacterToRoom player toName world of
-    Left err -> (world, err)
-    Right w  -> (w, (name player) ++ " is now in " ++ toName)
+    Left err -> (world, MsgInfo err)
+    Right w  -> (w, MsgInfo $ (name player) ++ " is now in " ++ toName)
 
+insertItem :: Item -> String -> WorldAction
 insertItem item toName world =
   case insertItemToRoom item toName world of
-    Left err -> (world, err)
-    Right w  -> (w, (name item) ++ " is now in " ++ toName)
+    Left err -> (world, MsgInfo err)
+    Right w  -> (w, MsgInfo $ (name item) ++ " is now in " ++ toName)
 
 goto :: String -> [String] -> WorldAction
 goto playerName args world =
   case findRoomOfPlayerExactly playerName world of
-    Left err -> (world, err)
+    Left err -> (world, MsgInfo err)
     Right r  -> case gotoFromTo playerName (name r) arg world of
-                    Left err        -> (world, err)
-                    Right (w, room) -> (w, "You are now in " ++ (name room) ++ ", " ++ (describe room))
+                    Left err        -> (world, MsgInfo err)
+                    Right (w, room) -> (w, MsgInfo $ "You are now in " ++ (name room) ++ ", " ++ (describe room))
   where arg = unwords args
 
 -- find something to describe in the given room
@@ -57,32 +60,32 @@ describeThing room arg playerName =
 lookAt :: String -> [String] -> WorldAction
 lookAt playerName args world =
   case findRoomOfPlayerExactly playerName world of
-    Left err -> (world, err)
-    Right r  -> (world, describeThing r (unwords args) playerName)
+    Left err -> (world, MsgInfo err)
+    Right r  -> (world, MsgInfo $ describeThing r (unwords args) playerName)
 
 inventory :: String -> [String] -> WorldAction
 inventory playerName _ world = case findCharacterExactly playerName world of
-  Left err   -> (world, err)
-  Right char -> (world, if null $ charInventory char
+  Left err   -> (world, MsgInfo err)
+  Right char -> (world, MsgInfo $ if null $ charInventory char
                           then "Your bag of swag is empty."
                           else "Your possessions: " ++ (intercalate ", " $ map name (charInventory char))
                 )
 
 pickup :: String -> [String] -> WorldAction
 pickup playerName [] world =
-    (world, "You take nothing.")
+    (world, MsgInfo $ "You take nothing.")
 pickup playerName args world =
   case characterPickupItem playerName (unwords args) world of
-    Left err     -> (world, err)
-    Right (w, i) -> (w, "You take " ++ (name i))
+    Left err     -> (world, MsgInfo err)
+    Right (w, i) -> (w, MsgInfo $ "You take " ++ (name i))
 
 put :: String -> [String] -> WorldAction
 put playerName [] world =
-    (world, "You drop nothing.")
+    (world, MsgInfo "You drop nothing.")
 put playerName args world =
   case characterPutItem playerName (unwords args) world of
-    Left err     -> (world, err)
-    Right (w, i) -> (w, "You drop " ++ (name i))
+    Left err     -> (world, MsgInfo err)
+    Right (w, i) -> (w, MsgInfo $ "You drop " ++ (name i))
 
 forge :: String -> [String] -> WorldAction
 forge playerName args world =
@@ -101,13 +104,13 @@ forge playerName args world =
                      newRoom <- updateCharInRoom newChar room
                      updateRoomInWorld newRoom world
              of
-               Left err -> (world, err)
-               Right w  -> (w, "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands.")
-      else (world, "usage: forge <item-name> $ <item-description>")
+               Left err -> (world, MsgInfo err)
+               Right w  -> (w, MsgInfo $ "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands.")
+      else (world, MsgInfo $ "usage: forge <item-name> $ <item-description>")
 
 discard :: String -> [String] -> WorldAction
 discard playerName [] world = do
-    (world, "You discard nothing.")
+    (world, MsgInfo "You discard nothing.")
 discard playerName args world =
   case do
     oldRoom <- findRoomOfPlayerExactly playerName world
@@ -117,8 +120,8 @@ discard playerName args world =
     newWorld <- updateRoomInWorld newRoom world
     Right (newWorld, item)
   of
-    Left err     -> (world, err)
-    Right (w, i) -> (w, "You discard " ++ (name i))
+    Left err     -> (world, MsgInfo err)
+    Right (w, i) -> (w, MsgInfo $ "You discard " ++ (name i))
 
 -- syntax: give <item-name> to <player-name>
 give :: String -> [String] -> WorldAction
@@ -140,9 +143,9 @@ give playerName args world =
                          newWorld <- updateRoomInWorld newRoom world
                          Right (newWorld, newReceiver, item)
              of
-               Left err -> (world, err)
-               Right (w, recv, item)  -> (w, "You give " ++ (name item) ++ " to " ++ (name recv))
-      else (world, "usage: give <item-name> to <player-name>")
+               Left err -> (world, MsgInfo err)
+               Right (w, recv, item)  -> (w, MsgInfo $ "You give " ++ (name item) ++ " to " ++ (name recv))
+      else (world, MsgInfo "usage: give <item-name> to <player-name>")
 
 -- main loop:
 
@@ -160,7 +163,7 @@ give playerName args world =
 -- the room see the message "Tom picked up Sword". If there is no such item to
 -- pick up, only the player will see the error message "There is no Sord here
 -- to pick up". The deliver callback is responsible to do this.
-stepWorld :: Monad m => (String -> m ()) -> World -> (World -> (World, String)) -> m World
+stepWorld :: Monad m => (Message -> m ()) -> World -> WorldAction -> m World
 stepWorld deliver world action = do
   let (newWorld, message) = action world
   deliver message
@@ -188,3 +191,17 @@ dispatch (Just playerName) tokens = do
       c:[] -> Just $ (snd c) playerName args
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
                      ++ (intercalate ", " $ map fst cs)
+
+stepToStdout = stepWorld (\msg -> do
+  case msg of
+    MsgInfo m ->
+      putStrLn m
+    MsgGoto char room ->
+      putStrLn $ (name char) ++ " goes to " ++ (name room)
+    MsgTake char item ->
+      putStrLn $ (name char) ++ " takes " ++ (name item)
+    MsgPut char item ->
+      putStrLn $ (name char) ++ " puts down " ++ (name item)
+    MsgGive giver item receiver ->
+      putStrLn $ (name giver) ++ " gives " ++ (name item) ++ " to " ++ (name receiver)
+    )
