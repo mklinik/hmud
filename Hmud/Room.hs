@@ -43,8 +43,8 @@ mkRoom name description adjacents =
        , roomAdjacents = adjacents
        }
 
-findCharacter :: String -> Room -> Either String Character
-findCharacter playerName room = maybe (Left $ "no character " ++ playerName ++ " in " ++ (roomName room)) Right
+findCharacterInRoom :: String -> Room -> Either String Character
+findCharacterInRoom playerName room = maybe (Left $ "no character " ++ playerName ++ " in " ++ (roomName room)) Right
   $ find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters room)
 
 findCharacterInRoomExactly :: Address -> Room -> Either String Character

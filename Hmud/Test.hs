@@ -37,13 +37,13 @@ specs = descriptions
         ((do
           w <- insertCharacterToRoom player0 "The Black Unicorn" world
           r <- findRoom "The Black Unicorn" w
-          findCharacter "player0" r
+          findCharacterInRoom "player0" r
         ) == Right player0)
     , it "works with abbreviated room name"
         ((do
           w <- insertCharacterToRoom player0 "The Bl" world
           r <- findRoom "The Black Unicorn" w
-          findCharacter "player0" r
+          findCharacterInRoom "player0" r
         ) == Right player0)
     ]
 
@@ -60,8 +60,8 @@ specs = descriptions
                   let (w3, _, _, _) = fromRight $ gotoFromTo (Address "player0addr") "The Black Unicorn" "town square" w2
                   let fromRoom = fromRight $ findRoom "The Black Unicorn" w3
                   let toRoom   = fromRight $ findRoom "town square" w3
-                  assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacter "player0" fromRoom)
-                  assertEqual "player is now in *toRoom*" (Right player0) (findCharacter "player0" toRoom)
+                  assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacterInRoom "player0" fromRoom)
+                  assertEqual "player is now in *toRoom*" (Right player0) (findCharacterInRoom "player0" toRoom)
       )
     , it "does not work with abbreviated names"
       (TestCase $ do

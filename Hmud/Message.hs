@@ -15,3 +15,7 @@ data Message =
   | MsgTake Character Item
   | MsgPut Character Item
   | MsgGive Character Item Character
+
+data IncomingMessage =
+    MsgCommand Address [String]
+  | MsgPlayerEnters Address String

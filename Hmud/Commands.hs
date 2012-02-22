@@ -46,7 +46,7 @@ goto playerId args world =
 describeThing :: Room -> String -> Address -> String
 describeThing room [] _ = "This is " ++ (name room) ++ ", " ++ (describe room)
 describeThing room arg playerId =
-  case findCharacter arg room of
+  case findCharacterInRoom arg room of
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
     Left err ->
       case findItemInRoom arg room of
@@ -134,7 +134,7 @@ give playerId args world =
            in
              case do char <- findCharacterExactly playerId world
                      room <- findRoomOfPlayerExactly playerId world
-                     receiver <- findCharacter receiverName room
+                     receiver <- findCharacterInRoom receiverName room
                      if char == receiver then Left "You give the item to yourself." else do
                          (newChar, item) <- removeItemFromInventory itName char
                          let newReceiver = giveItemToCharacter item receiver

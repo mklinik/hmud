@@ -1,8 +1,9 @@
 module Main where
 
 import Network
-import Network.XMPP
-import Network.XMPP.MUC
+import qualified Network.XMPP as XMPP
+import Network.XMPP (XMPP)
+import qualified Network.XMPP.MUC as XMPP
 import Data.List (isPrefixOf, intercalate)
 import qualified Data.Map as Map
 import Data.Map (Map)
@@ -16,6 +17,7 @@ import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
 import Hmud.Message
+import Hmud.Hmud
 import Xmpp.Users
 
 -- The bot's JID is "bot@example.com"
@@ -30,80 +32,65 @@ botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
 main :: IO ()
 main = withSocketsDo $ do
   -- Connect to server...
-  c <- openStream botServer
-  getStreamStart c
+  c <- XMPP.openStream botServer
+  XMPP.getStreamStart c
 
-  runXMPP c $ do
+  XMPP.runXMPP c $ do
   -- ...authenticate...
-  startAuth botUsername botServer botPassword botResource
-  sendPresence (Just ("", [homepageURL, ""])) Nothing
-  handleVersion "hmud" "0.1" "Linux"
+  XMPP.startAuth botUsername botServer botPassword botResource
+  XMPP.sendPresence (Just ("", [homepageURL, ""])) Nothing
+  XMPP.handleVersion "hmud" "0.1" "Linux"
   -- ...and do something.
 
-  joinGroupchat "oracle" groupchatJID Nothing
+  XMPP.joinGroupchat "oracle" groupchatJID Nothing
 
-  player <- liftIO $ randomCharacter "Markus" $ Address ""
-  npc1 <- liftIO $ randomCharacter "Martin" $ Address ""
-  npc2 <- liftIO $ randomCharacter "Karin" $ Address ""
-  npc3 <- liftIO $ randomCharacter "Kathy" $ Address ""
+  player <- XMPP.liftIO $ randomCharacter "Markus" $ Address ""
+  npc1 <- XMPP.liftIO $ randomCharacter "Martin" $ Address ""
+  npc2 <- XMPP.liftIO $ randomCharacter "Karin" $ Address ""
+  npc3 <- XMPP.liftIO $ randomCharacter "Kathy" $ Address ""
 
-  w2 <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
-  w3 <- liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
-  w4 <- liftIO $ stepToStdout w3 (insert npc2 "The Black Unicorn")
-  w5 <- liftIO $ stepToStdout w4 (insert npc3 "town square")
-  w6 <- liftIO $ stepToStdout w5 (insertItem scroll0 "ivory tower")
-  w7 <- liftIO $ stepToStdout w6 (insertItem beer "The Black Unicorn")
-  w8 <- liftIO $ stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
+  w2 <- XMPP.liftIO $ stepToStdout world (insert player "The Black Unicorn")
+  w3 <- XMPP.liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
+  w4 <- XMPP.liftIO $ stepToStdout w3 (insert npc2 "The Black Unicorn")
+  w5 <- XMPP.liftIO $ stepToStdout w4 (insert npc3 "town square")
+  w6 <- XMPP.liftIO $ stepToStdout w5 (insertItem scroll0 "ivory tower")
+  w7 <- XMPP.liftIO $ stepToStdout w6 (insertItem beer "The Black Unicorn")
+  w8 <- XMPP.liftIO $ stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
 
-  run (Map.empty, Map.empty) w8
+  run w8
 
-run :: UserNameMap -> World -> XMPP ()
-run userNames@(nicks, users) world = do
-  -- Wait for an incoming message...
-  msg <- waitForStanza (const True)
-  if (isChat `conj` hasBody) msg then do
-    let sender = fmap Address (getAttr "from" msg) -- Maybe Address
-        tokens = words $ maybe "" id (getMessageBody msg)
-    liftIO $ putStrLn $ "got message from " ++ (maybe "" show sender)
+instance MonadHmud XMPP where
+  waitForMessage = waitForMessageXmpp
+  sendMessage = XMPP.sendMessage
+  liftIO = XMPP.liftIO
+  stepWorld_ = stepToXmpp
+
+waitForMessageXmpp :: XMPP IncomingMessage
+waitForMessageXmpp = do
+  stanza <- XMPP.waitForStanza (const True)
+  if (XMPP.isChat `XMPP.conj` XMPP.hasBody) stanza then do
+    let sender = fmap Address (XMPP.getAttr "from" stanza) -- Maybe Address
+        tokens = words $ maybe "" id (XMPP.getMessageBody stanza)
     case sender of
-      Nothing -> run userNames world
-      Just playerId ->
-        case dispatch playerId tokens of
-          Nothing -> run userNames world
-          Just a  -> do
-            w2 <- (stepToXmpp playerId) world a
-            run userNames w2
-  else if isGroupchatPresence msg then do
-    -- * maintain nick -> jid mapping
-    -- * maintain jid -> player name mapping
-    -- * greet users as they join (any RoleChange must do for us)
-    let sender = fmap Address (getAttr "from" msg) -- Maybe Address
-    liftIO $ putStrLn $ "got groupchat presence from: " ++ (maybe "" show sender)
+      Nothing -> waitForMessageXmpp
+      Just playerId -> return $ MsgCommand playerId tokens
+  else if XMPP.isGroupchatPresence stanza then do
+    let sender = fmap Address (XMPP.getAttr "from" stanza) -- Maybe Address
     case sender of
-      Nothing -> run userNames world -- we got a message without "from"?
+      Nothing -> waitForMessageXmpp
       Just playerId -> do
-        let (presence, occupant) = doGroupchatPresence msg
-        (newUserNames, newWorld) <- case presence of
-          RoleChange _ -> -- a user has joined or changed nick
-            case occJid occupant of
-              Nothing -> return (userNames, world) -- anonymous users don't get a character
+        let (presence, occupant) = XMPP.doGroupchatPresence stanza
+        case presence of
+          XMPP.RoleChange _ -> -- a user has joined or changed nick
+            case XMPP.occJid occupant of
+              Nothing -> waitForMessageXmpp -- anonymous users don't get a character
               Just jid -> if (jid == botJID)
-                then return (userNames, world) -- filter presence msg from myself
-                else
-                  let (isNewUser, newUserNames) = updatePlayerName jid $ updateNick (occNick occupant) jid userNames
-                    in if isNewUser
-                        then do
-                          player <- liftIO $ randomCharacter (jid2player jid) playerId
-                          newWorld <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
-                          sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
-                          return (newUserNames, newWorld)
-                        else return (newUserNames, world)
-          otherwise -> return (userNames, world)
-        run newUserNames newWorld
-  else do
-    run userNames world
+                then waitForMessageXmpp -- filter presence msg from myself
+                else return $ MsgPlayerEnters playerId (jid2player jid)
+          otherwise -> waitForMessageXmpp
+  else waitForMessageXmpp
 
-stepToXmpp :: Address -> (World -> WorldAction -> XMPP World)
+stepToXmpp :: MonadHmud m => Address -> (World -> WorldAction -> m World)
 stepToXmpp (Address sender) = stepWorld (\msg -> do
   case msg of
     MsgInfo m ->

@@ -64,6 +64,13 @@ findCharacterExactly playerId world =
     p:[]      -> Right p
     otherwise -> Left $ "ambiguous character name: " ++ (show playerId)
 
+findCharacter :: String -> World -> Either String Character
+findCharacter playerName world =
+  case rights $ map (findCharacterInRoom playerName) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ (show playerName)
+    p:[]      -> Right p
+    otherwise -> Left $ "ambiguous character name: " ++ (show playerName)
+
 characterPickupItem :: Address -> String -> World -> Either String (World, Item)
 characterPickupItem playerId itName world = do
   oldRoom <- findRoomOfPlayerExactly playerId world
