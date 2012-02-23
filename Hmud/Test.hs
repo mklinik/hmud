@@ -120,12 +120,23 @@ specs = descriptions
     ]
 
   -- system tests, maps input messages to output messages
-  , describe "players joining"
+  , describe "system tests"
     [ it "a player joins, and is put to The Black Unicorn"
       ( TestCase $ do
-         let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) ([(MsgPlayerEnters (Address "player0") "Hel Mut")], []::[Message])
-         assertBool "input messages are all consumed" $ null inputMsgs
-         assertEqual "player0 is in the Unicorn" "The Black Unicorn" (roomName (fromRight $ findRoomOfPlayerExactly (Address "player0") newWorld))
+          let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) ([(MsgPlayerEnters (Address "player0") "Hel Mut")], []::[Message])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          assertEqual "player0 is in the Unicorn"
+            "The Black Unicorn" (roomName (fromRight $ findRoomOfPlayerExactly (Address "player0") newWorld))
+      )
+    , it "a player joins, then goes to town square"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) (
+                [ (MsgPlayerEnters (Address "player0") "Hel Mut")
+                , (MsgCommand      (Address "player0") ["goto", "town square"])
+                ], []::[Message])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          assertEqual "player0 is in town square"
+            "town square" (roomName (fromRight $ findRoomOfPlayerExactly (Address "player0") newWorld))
       )
     ]
 

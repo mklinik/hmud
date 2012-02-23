@@ -1,6 +1,6 @@
-.PHONY: all tests clean cliFrontend xmppFrontend
+.PHONY: all test clean cliFrontend xmppFrontend
 
-all: cliFrontend xmppFrontend tests
+all: cliFrontend xmppFrontend test
 
 cliFrontend:
 	ghc --make Main.hs -o $@
@@ -8,7 +8,7 @@ cliFrontend:
 xmppFrontend:
 	ghc --make Xmpp/Main.hs -o $@
 
-tests:
+test:
 	runhaskell Hmud/Test.hs
 
 clean:
