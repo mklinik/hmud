@@ -97,15 +97,15 @@ forge playerId args world =
            in
              case do char <- findCharacterExactly playerId world
                      _ <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
-                     let newChar = giveItemToCharacter
-                                     (Item { itemName = itName, itemDescription = description })
-                                     char
+                     let item = (Item { itemName = itName, itemDescription = description })
+                     let newChar = giveItemToCharacter item char
                      room <- findRoomOfPlayerExactly playerId world
                      newRoom <- updateCharInRoom newChar room
-                     updateRoomInWorld newRoom world
+                     newWorld <- updateRoomInWorld newRoom world
+                     return (newWorld, char, item)
              of
                Left err -> (world, MsgInfo err)
-               Right w  -> (w, MsgInfo $ "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands.")
+               Right (w, char, item) -> (w, MsgForge char item)
       else (world, MsgInfo $ "usage: forge <item-name> $ <item-description>")
 
 discard :: Address -> [String] -> WorldAction

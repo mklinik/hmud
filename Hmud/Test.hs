@@ -7,6 +7,8 @@ import Data.Maybe (fromJust, isNothing)
 import Data.Either.Unwrap
 import qualified Data.Map as Map
 import Data.Map (Map)
+import qualified Data.List as List
+import System.IO
 
 import qualified Control.Monad.State as State
 import Control.Monad.State (State)
@@ -17,6 +19,7 @@ import Hmud.Room
 import Hmud.TestData
 import Hmud.Hmud
 import Hmud.Message
+import Hmud.Item
 import Xmpp.Users
 
 player0 = Character
@@ -132,11 +135,34 @@ specs = descriptions
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) (
                 [ (MsgPlayerEnters (Address "player0") "Hel Mut")
-                , (MsgCommand      (Address "player0") ["goto", "town square"])
+                , (MsgCommand      (Address "player0") (words "goto town square"))
                 ], []::[Message])
           assertBool "input messages are all consumed" $ null inputMsgs
-          assertEqual "player0 is in town square"
-            "town square" (roomName (fromRight $ findRoomOfPlayerExactly (Address "player0") newWorld))
+          let room = fromRight $ findRoomOfPlayerExactly (Address "player0") newWorld
+          assertEqual "player0 is in town square" "town square" (roomName room)
+          let player = fromRight $ findCharacterInRoomExactly (Address "player0") room
+          let (MsgGoto fromRoom char toRoom) = head $ List.filter isMsgGoto outputMsgs
+          assertEqual "fromRoom is the Unicorn" "The Black Unicorn" (roomName fromRoom)
+          assertEqual "player is Hel Mut" "Hel Mut" (charName char)
+          assertEqual "toRoom is town square" "town square" (roomName toRoom)
+      )
+    , it "a player joins, then picks up the scroll of forgery, then forges an item"
+      ( TestCase $ do
+          let world2 = fromRight $ insertItemToRoom scroll1 "The Black Unicorn" world
+          let (world3, (inputMsgs, outputMsgs)) = State.runState (run world2) (
+                [ (MsgPlayerEnters (Address "player0") "Hel Mut")
+                , (MsgCommand      (Address "player0") (words "take scroll"))
+                , (MsgCommand      (Address "player0") (words "forge mug of beer $ hmmmmm, beer"))
+                ], []::[Message])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let room = fromRight $ findRoomOfPlayerExactly (Address "player0") world3
+          assertBool "scroll is not in the room" $ isLeft $ findItemInRoom "scroll of forgery" room
+          let char = fromRight $ findCharacterExactly (Address "player0") world3
+          assertBool "scroll is in the players inventory" $ isRight $ characterFindItem "scroll of forgery" char
+          assertBool "beer is in the players inventory" $ isRight $ characterFindItem "mug of beer" char
+          let (MsgForge c it) = head $ List.filter isMsgForge outputMsgs
+          assertEqual "character forged something" "Hel Mut" (charName c)
+          assertEqual "forged item is mug of beer" "mug of beer" (itemName it)
       )
     ]
 

@@ -33,7 +33,7 @@ instance Describable Room where
           else ""
 
 instance Show Room where
-  show = describe
+  show = name
 
 mkRoom name description adjacents =
   Room { roomName = name
