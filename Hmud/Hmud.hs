@@ -1,4 +1,8 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 module Hmud.Hmud where
+
+import qualified Control.Monad.State as State
+import Control.Monad.State (State)
 
 import Hmud.Commands
 import Hmud.Message
@@ -9,10 +13,31 @@ import Hmud.Util
 class Monad m => MonadHmud m where
   waitForMessage :: m IncomingMessage
   sendMessage :: String -> String -> m ()
-  liftIO :: IO a -> m a
+  mkRandomCharacter :: String -> Address -> m Character
   stepWorld_ :: Address -> World -> WorldAction -> m World
 
-run :: MonadHmud m => World -> m ()
+-- for testing only: maps a list of IncomingMessages to a list of outgoing Messages
+instance MonadHmud (State ([IncomingMessage], [Message])) where
+  waitForMessage = do
+    (ins, outs) <- State.get
+    case ins of
+      [] -> return MsgExit
+      (m:ms) -> State.put (ms, outs) >> return m
+  sendMessage _ _ = return () -- already handeled in stepWorld_
+  mkRandomCharacter name addr =
+      return Character { charName = name
+                       , charRace = Human
+                       , charRole = Wizard
+                       , charGender = Male
+                       , charLevel = 42
+                       , charInventory = []
+                       , charAddress = addr
+                       }
+  stepWorld_ (Address sender) = stepWorld (\msg -> do
+    (ins, outs) <- State.get
+    State.put (ins, outs ++ [msg]))
+
+run :: MonadHmud m => World -> m World
 run world = do
   msg <- waitForMessage
   case msg of
@@ -21,14 +46,14 @@ run world = do
           Just a  -> do
             w2 <- (stepWorld_ playerId) world a
             run w2
-    -- MsgPlayerEnters playerId playerName -> undefined -- TODO
     MsgPlayerEnters playerId playerName -> do
       newWorld <-
         case findCharacter playerName world of
           Left _ -> do
-              player <- liftIO $ randomCharacter playerName playerId
-              newWorld <- liftIO $ stepToStdout world (insert player "The Black Unicorn")
+              player <- mkRandomCharacter playerName playerId
+              newWorld <- stepWorld_ playerId world (insert player "The Black Unicorn")
               -- XMPP.sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
               return newWorld
           Right _ -> return world
       run newWorld
+    MsgExit -> return world

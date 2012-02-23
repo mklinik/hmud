@@ -8,10 +8,15 @@ import Data.Either.Unwrap
 import qualified Data.Map as Map
 import Data.Map (Map)
 
+import qualified Control.Monad.State as State
+import Control.Monad.State (State)
+
 import Hmud.World
 import Hmud.Character
 import Hmud.Room
 import Hmud.TestData
+import Hmud.Hmud
+import Hmud.Message
 import Xmpp.Users
 
 player0 = Character
@@ -111,6 +116,16 @@ specs = descriptions
           let (nicks3, _) = updateNick "mkl" "markus.klinik@localhost/Gajim" (nicks2, Map.empty)
           assertBool "markus has now nick mkl" $ (fromJust $ Map.lookup "mkl" nicks3) == "markus.klinik@localhost/Gajim"
           assertBool "nick foobar no longer exists" $ (isNothing $ Map.lookup "foobar" nicks3)
+      )
+    ]
+
+  -- system tests, maps input messages to output messages
+  , describe "players joining"
+    [ it "a player joins, and is put to The Black Unicorn"
+      ( TestCase $ do
+         let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) ([(MsgPlayerEnters (Address "player0") "Hel Mut")], []::[Message])
+         assertBool "input messages are all consumed" $ null inputMsgs
+         assertEqual "player0 is in the Unicorn" "The Black Unicorn" (roomName (fromRight $ findRoomOfPlayerExactly (Address "player0") newWorld))
       )
     ]
 

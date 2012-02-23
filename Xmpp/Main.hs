@@ -58,11 +58,12 @@ main = withSocketsDo $ do
   w8 <- XMPP.liftIO $ stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
 
   run w8
+  return ()
 
 instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
   sendMessage = XMPP.sendMessage
-  liftIO = XMPP.liftIO
+  mkRandomCharacter name addr = XMPP.liftIO $ randomCharacter name addr
   stepWorld_ = stepToXmpp
 
 waitForMessageXmpp :: XMPP IncomingMessage
