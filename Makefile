@@ -1,4 +1,4 @@
-.PHONY: all test clean cliFrontend xmppFrontend
+.PHONY: all test clean cliFrontend xmppFrontend run
 
 all: cliFrontend xmppFrontend test
 
@@ -14,3 +14,6 @@ test:
 clean:
 	find . -name '*.hi' -o -name '*.o' | xargs -r rm
 	rm -f xmppFrontend cliFrontend
+
+run: xmppFrontend
+	./xmppFrontend

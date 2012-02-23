@@ -77,6 +77,9 @@ instance Describable Character where
 instance Show Character where
   show = charName
 
+fromAddress :: Address -> String
+fromAddress (Address a) = a
+
 giveItemToCharacter item char = char { charInventory = item : (charInventory char) }
 
 characterFindItem :: String -> Character -> Either String Item

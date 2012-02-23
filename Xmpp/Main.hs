@@ -7,6 +7,7 @@ import qualified Network.XMPP.MUC as XMPP
 import Data.List (isPrefixOf, intercalate)
 import qualified Data.Map as Map
 import Data.Map (Map)
+import Control.Monad (mapM_)
 
 import Hmud.Item
 import Hmud.Describable
@@ -62,18 +63,23 @@ main = withSocketsDo $ do
 
 instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
-  sendMessage = XMPP.sendMessage
+  sendMessage addr text
+      | addr == "" = return ()
+      | otherwise = XMPP.sendMessage addr text
   mkRandomCharacter name addr = XMPP.liftIO $ randomCharacter name addr
   stepWorld_ = stepToXmpp
+  debugOut str = XMPP.liftIO $ putStrLn str
 
 waitForMessageXmpp :: XMPP IncomingMessage
 waitForMessageXmpp = do
   stanza <- XMPP.waitForStanza (const True)
   if (XMPP.isChat `XMPP.conj` XMPP.hasBody) stanza then do
+    XMPP.liftIO $ print stanza
     let sender = fmap Address (XMPP.getAttr "from" stanza) -- Maybe Address
         tokens = words $ maybe "" id (XMPP.getMessageBody stanza)
     case sender of
       Nothing -> waitForMessageXmpp
+      Just playerId | fromAddress playerId == botJID -> waitForMessageXmpp
       Just playerId -> return $ MsgCommand playerId tokens
   else if XMPP.isGroupchatPresence stanza then do
     let sender = fmap Address (XMPP.getAttr "from" stanza) -- Maybe Address
@@ -82,12 +88,13 @@ waitForMessageXmpp = do
       Just playerId -> do
         let (presence, occupant) = XMPP.doGroupchatPresence stanza
         case presence of
-          XMPP.RoleChange _ -> -- a user has joined or changed nick
+          XMPP.RoleChange _ -> do -- a user has joined or changed nick
             case XMPP.occJid occupant of
               Nothing -> waitForMessageXmpp -- anonymous users don't get a character
               Just jid -> if (jid == botJID)
                 then waitForMessageXmpp -- filter presence msg from myself
-                else return $ MsgPlayerEnters playerId (jid2player jid)
+                else do
+                  return $ MsgPlayerEnters playerId (jid2player jid)
           otherwise -> waitForMessageXmpp
   else waitForMessageXmpp
 
@@ -96,8 +103,9 @@ stepToXmpp (Address sender) = stepWorld (\msg -> do
   case msg of
     MsgInfo m ->
       sendMessage sender m
-    MsgGoto fromRoom char toRoom ->
-      sendMessage sender $ (name char) ++ " goes to " ++ (name toRoom)
+    MsgGoto fromRoom char toRoom -> do
+      mapM_ (\char -> sendMessage (fromAddress $ charAddress char) $ describeMessage (charAddress char) msg)
+        $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
     MsgTake char item ->
       sendMessage sender $ (name char) ++ " takes " ++ (name item)
     MsgPut char item ->

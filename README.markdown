@@ -41,12 +41,12 @@ provides odd characters, locations and items.
 - The XMPP frontend must ensure that player names are unique
 - To use XMPP grou chats, players must already have a jabber account, so we
   don't need to care about logins etc.
-- Just map a character to a jabber ID somehow
+- Nota bene: for the Xmpp frontend to work correctly, the group chat must not
+  be anonymous. Otherwise, we can't give you your old character again when you
+  come back.
 
 Screenshot
 ==========
-
-The XMPP frontend does not yet exist. You interact with the game using ghci, no readline.
 
     $ ghci Main.hs
     *Main> main
