@@ -45,20 +45,9 @@ main = withSocketsDo $ do
 
   XMPP.joinGroupchat "oracle" groupchatJID Nothing
 
-  player <- XMPP.liftIO $ randomCharacter "Markus" $ Nothing
-  npc1 <- XMPP.liftIO $ randomCharacter "Martin" $ Nothing
-  npc2 <- XMPP.liftIO $ randomCharacter "Karin" $ Nothing
-  npc3 <- XMPP.liftIO $ randomCharacter "Kathy" $ Nothing
+  w1 <- XMPP.liftIO $ stepWorld Nothing world (insertItem scroll1 "The Black Unicorn")
 
-  w2 <- XMPP.liftIO $ stepWorld Nothing world (insert player "The Black Unicorn")
-  w3 <- XMPP.liftIO $ stepWorld Nothing w2 (insert npc1 "The Black Unicorn")
-  w4 <- XMPP.liftIO $ stepWorld Nothing w3 (insert npc2 "The Black Unicorn")
-  w5 <- XMPP.liftIO $ stepWorld Nothing w4 (insert npc3 "town square")
-  w6 <- XMPP.liftIO $ stepWorld Nothing w5 (insertItem scroll0 "ivory tower")
-  w7 <- XMPP.liftIO $ stepWorld Nothing w6 (insertItem beer "The Black Unicorn")
-  w8 <- XMPP.liftIO $ stepWorld Nothing w7 (insertItem scroll1 "The Black Unicorn")
-
-  run w8
+  run w1
   return ()
 
 instance MonadHmud XMPP where

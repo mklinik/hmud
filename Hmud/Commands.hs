@@ -17,11 +17,11 @@ type WorldAction = World -> (World, Message)
 idWorldAction :: String -> WorldAction
 idWorldAction text world = (world, MsgInfo text)
 
-insert :: Character -> String -> WorldAction
-insert player toName world =
+insertNewPlayer :: Character -> String -> WorldAction
+insertNewPlayer player toName world =
   case insertCharacterToRoom player toName world of
     Left err -> (world, MsgInfo err)
-    Right w  -> (w, MsgInfo $ (name player) ++ " is now in " ++ toName)
+    Right w  -> (w, MsgInfo $ "Welcome " ++ (name player) ++ ", you are a " ++ (describe player) ++ ". Type help for more info.")
 
 insertItem :: Item -> String -> WorldAction
 insertItem item toName world =
@@ -228,10 +228,8 @@ run world = do
         case findCharacter playerName world of
           Left _ -> do
               player <- mkRandomCharacter playerName playerId
-              newWorld <- stepWorld playerId world (insert player "The Black Unicorn")
-              debugOut ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
-              -- XMPP.sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
+              newWorld <- stepWorld playerId world (insertNewPlayer player "The Black Unicorn")
               return newWorld
-          Right _ -> return world -- TODO: should this be run world?
+          Right _ -> return world
       run newWorld
     MsgExit -> return world
