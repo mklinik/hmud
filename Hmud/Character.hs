@@ -7,8 +7,7 @@ import qualified Control.Monad.Error
 import Hmud.Describable
 import Hmud.Item
 
-newtype Address = Address String
-  deriving (Eq, Show)
+type Address = Maybe String
 
 data Race = Human | Elven | Dwarven
   deriving (Eq, Show, Enum, Bounded)
@@ -76,9 +75,6 @@ instance Describable Character where
 
 instance Show Character where
   show = charName
-
-fromAddress :: Address -> String
-fromAddress (Address a) = a
 
 giveItemToCharacter item char = char { charInventory = item : (charInventory char) }
 

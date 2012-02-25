@@ -45,10 +45,10 @@ main = withSocketsDo $ do
 
   XMPP.joinGroupchat "oracle" groupchatJID Nothing
 
-  player <- XMPP.liftIO $ randomCharacter "Markus" $ Address ""
-  npc1 <- XMPP.liftIO $ randomCharacter "Martin" $ Address ""
-  npc2 <- XMPP.liftIO $ randomCharacter "Karin" $ Address ""
-  npc3 <- XMPP.liftIO $ randomCharacter "Kathy" $ Address ""
+  player <- XMPP.liftIO $ randomCharacter "Markus" $ Nothing
+  npc1 <- XMPP.liftIO $ randomCharacter "Martin" $ Nothing
+  npc2 <- XMPP.liftIO $ randomCharacter "Karin" $ Nothing
+  npc3 <- XMPP.liftIO $ randomCharacter "Kathy" $ Nothing
 
   w2 <- XMPP.liftIO $ stepToStdout world (insert player "The Black Unicorn")
   w3 <- XMPP.liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
@@ -63,9 +63,8 @@ main = withSocketsDo $ do
 
 instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
-  sendMessage addr text
-      | addr == "" = return ()
-      | otherwise = XMPP.sendMessage addr text
+  sendMessage Nothing _ = return ()
+  sendMessage (Just addr) text = XMPP.sendMessage addr text
   mkRandomCharacter name addr = XMPP.liftIO $ randomCharacter name addr
   stepWorld_ = stepToXmpp
   debugOut str = XMPP.liftIO $ putStrLn str
@@ -75,14 +74,14 @@ waitForMessageXmpp = do
   stanza <- XMPP.waitForStanza (const True)
   if (XMPP.isChat `XMPP.conj` XMPP.hasBody) stanza then do
     XMPP.liftIO $ print stanza
-    let sender = fmap Address (XMPP.getAttr "from" stanza) -- Maybe Address
+    let sender = XMPP.getAttr "from" stanza
         tokens = words $ maybe "" id (XMPP.getMessageBody stanza)
     case sender of
       Nothing -> waitForMessageXmpp
-      Just playerId | fromAddress playerId == botJID -> waitForMessageXmpp
-      Just playerId -> return $ MsgCommand playerId tokens
+      Just playerId | playerId == botJID -> waitForMessageXmpp
+      Just playerId -> return $ MsgCommand (Just playerId) tokens
   else if XMPP.isGroupchatPresence stanza then do
-    let sender = fmap Address (XMPP.getAttr "from" stanza) -- Maybe Address
+    let sender = XMPP.getAttr "from" stanza
     case sender of
       Nothing -> waitForMessageXmpp
       Just playerId -> do
@@ -94,17 +93,17 @@ waitForMessageXmpp = do
               Just jid -> if (jid == botJID)
                 then waitForMessageXmpp -- filter presence msg from myself
                 else do
-                  return $ MsgPlayerEnters playerId (jid2player jid)
+                  return $ MsgPlayerEnters (Just playerId) (jid2player jid)
           otherwise -> waitForMessageXmpp
   else waitForMessageXmpp
 
 stepToXmpp :: MonadHmud m => Address -> (World -> WorldAction -> m World)
-stepToXmpp (Address sender) = stepWorld (\msg -> do
+stepToXmpp sender = stepWorld (\msg -> do
   case msg of
     MsgInfo m ->
       sendMessage sender m
     MsgGoto fromRoom char toRoom -> do
-      mapM_ (\char -> sendMessage (fromAddress $ charAddress char) $ describeMessage (charAddress char) msg)
+      mapM_ (\char -> sendMessage (charAddress char) $ describeMessage (charAddress char) msg)
         $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
     MsgTake char item ->
       sendMessage sender $ (name char) ++ " takes " ++ (name item)

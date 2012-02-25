@@ -13,7 +13,7 @@ import Hmud.Describable
 
 class Monad m => MonadHmud m where
   waitForMessage :: m IncomingMessage
-  sendMessage :: String -> String -> m ()
+  sendMessage :: Address -> String -> m ()
   mkRandomCharacter :: String -> Address -> m Character
   stepWorld_ :: Address -> World -> WorldAction -> m World
   debugOut :: String -> m ()
@@ -35,7 +35,7 @@ instance MonadHmud (State ([IncomingMessage], [Message])) where
                        , charInventory = []
                        , charAddress = addr
                        }
-  stepWorld_ (Address sender) = stepWorld (\msg -> do
+  stepWorld_ _ = stepWorld (\msg -> do
     (ins, outs) <- State.get
     State.put (ins, outs ++ [msg]))
   debugOut _ = return ()
