@@ -9,6 +9,7 @@ import Hmud.Character
 import Hmud.Item
 import Hmud.Message
 import Hmud.Hmud
+import Hmud.Util
 
 data CommandTag = Quit | Other
 
@@ -21,7 +22,7 @@ insertNewPlayer :: Character -> String -> WorldAction
 insertNewPlayer player toName world =
   case insertCharacterToRoom player toName world of
     Left err -> (world, MsgInfo err)
-    Right w  -> (w, MsgInfo $ "Welcome " ++ (name player) ++ ", you are a " ++ (describe player) ++ ". Type help for more info.")
+    Right w  -> (w, MsgInfo $ "Welcome " ++ (name player) ++ ", you are a " ++ (describe player) ++ ". Type \"help\" for more information.")
 
 insertItem :: Item -> String -> WorldAction
 insertItem item toName world =
@@ -148,6 +149,12 @@ give playerId args world =
                Right (w, giver, item, givee)  -> (w, MsgGive giver item givee)
       else (world, MsgInfo "usage: give <item-name> to <player-name>")
 
+help :: Address -> [String] -> WorldAction
+help playerId args world
+  | args == ["commands"] = (world, MsgInfo $ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
+  | otherwise = (world, MsgInfo $ "Welcome to The World. Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
+  )
+
 -- main loop:
 
   -- * have one world object
@@ -192,27 +199,28 @@ stepWorld sender world action = do
 
   return newWorld
 
-commands :: [(String, Address -> [String] -> WorldAction)]
+commands :: [(String, Address -> [String] -> WorldAction, String)]
 commands =
-  [ ("lookat", lookAt)
-  , ("goto", goto)
-  , ("inventory", inventory)
-  , ("take", pickup)
-  , ("put", put)
-  , ("forge", forge)
-  , ("discard", discard)
-  , ("give", give)
+  [ ("lookat", lookAt, "lookat\n  Describes your immediate surroundings.\nlookat <name>\n  Look at items or players.")
+  , ("goto", goto, "goto <room-name>\n  Go to a different room.")
+  , ("inventory", inventory, "inventory\n  List your possessions.")
+  , ("take", pickup, "take <item-name>\n  Pick up an item.")
+  , ("put", put, "put <item-name>\n  Put down an item.")
+  , ("forge", forge, "forge <name> $ <description>\n  Create a new item. Requires a scroll of forgery.")
+  , ("discard", discard, "discard <item-name>\n  Delete an item. Completely. Forever. Think twice.")
+  , ("give", give, "give <item-name> to <player-name>\n  Give an item to another player.")
+  , ("help", help, "")
   ]
 
 dispatch :: Address -> [String] -> Maybe WorldAction
 dispatch playerId tokens = do
   case tokens of
     []             -> Nothing
-    (command:args) -> case (filter (\c -> command `isPrefixOf` (fst c)) commands) of
-      []   -> Just $ idWorldAction $ "no such command: " ++ command
-      c:[] -> Just $ (snd c) playerId args
+    (command:args) -> case (filter (\(cname, _, _) -> command `isPrefixOf` cname) commands) of
+      []   -> Just $ idWorldAction $ "no such command: " ++ command ++ ". Type \"help commands\" to get a list of what you can do"
+      (_, c, _):[] -> Just $ c playerId args
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
-                     ++ (intercalate ", " $ map fst cs)
+                     ++ (intercalate ", " $ map (\(cname, _, _) -> cname) cs)
 
 run :: MonadHmud m => World -> m World
 run world = do

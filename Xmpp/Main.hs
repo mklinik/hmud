@@ -26,7 +26,6 @@ botUsername = "markus.klinik"
 botServer = "localhost"
 botPassword = "abc"
 botResource = "oracle"
-homepageURL = "https://github.com/mklinik/hmud"
 groupchatJID = "gtf@conference.localhost"
 botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
 
