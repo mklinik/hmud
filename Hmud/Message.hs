@@ -42,9 +42,11 @@ describeMessage receiver (MsgGoto fromRoom char toRoom)
   | roomHasCharacterExactly receiver fromRoom = (name char) ++ " leaves."
   | roomHasCharacterExactly receiver toRoom   = (name char) ++ " enters."
   | otherwise = (name char) ++ " goes to " ++ (name toRoom) -- should never happen
+describeMessage receiver (MsgTake char item)
+  | receiver == (charAddress char) = "You take " ++ (name item)
+  | otherwise = (name char) ++ " takes " ++ (name item)
 describeMessage _ msg = show msg
 
-  -- | MsgTake Character Item
   -- | MsgPut Character Item
   -- | MsgGive Character Item Character
   -- | MsgForge Character Item

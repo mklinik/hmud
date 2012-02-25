@@ -50,13 +50,13 @@ main = withSocketsDo $ do
   npc2 <- XMPP.liftIO $ randomCharacter "Karin" $ Nothing
   npc3 <- XMPP.liftIO $ randomCharacter "Kathy" $ Nothing
 
-  w2 <- XMPP.liftIO $ stepToStdout world (insert player "The Black Unicorn")
-  w3 <- XMPP.liftIO $ stepToStdout w2 (insert npc1 "The Black Unicorn")
-  w4 <- XMPP.liftIO $ stepToStdout w3 (insert npc2 "The Black Unicorn")
-  w5 <- XMPP.liftIO $ stepToStdout w4 (insert npc3 "town square")
-  w6 <- XMPP.liftIO $ stepToStdout w5 (insertItem scroll0 "ivory tower")
-  w7 <- XMPP.liftIO $ stepToStdout w6 (insertItem beer "The Black Unicorn")
-  w8 <- XMPP.liftIO $ stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
+  w2 <- XMPP.liftIO $ stepWorld Nothing world (insert player "The Black Unicorn")
+  w3 <- XMPP.liftIO $ stepWorld Nothing w2 (insert npc1 "The Black Unicorn")
+  w4 <- XMPP.liftIO $ stepWorld Nothing w3 (insert npc2 "The Black Unicorn")
+  w5 <- XMPP.liftIO $ stepWorld Nothing w4 (insert npc3 "town square")
+  w6 <- XMPP.liftIO $ stepWorld Nothing w5 (insertItem scroll0 "ivory tower")
+  w7 <- XMPP.liftIO $ stepWorld Nothing w6 (insertItem beer "The Black Unicorn")
+  w8 <- XMPP.liftIO $ stepWorld Nothing w7 (insertItem scroll1 "The Black Unicorn")
 
   run w8
   return ()
@@ -64,16 +64,14 @@ main = withSocketsDo $ do
 instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
   sendMessage Nothing _ = return ()
-  sendMessage (Just addr) text = XMPP.sendMessage addr text
+  sendMessage (Just addr) msg = XMPP.sendMessage addr $ describeMessage (Just addr) msg
   mkRandomCharacter name addr = XMPP.liftIO $ randomCharacter name addr
-  stepWorld_ = stepToXmpp
   debugOut str = XMPP.liftIO $ putStrLn str
 
 waitForMessageXmpp :: XMPP IncomingMessage
 waitForMessageXmpp = do
   stanza <- XMPP.waitForStanza (const True)
   if (XMPP.isChat `XMPP.conj` XMPP.hasBody) stanza then do
-    XMPP.liftIO $ print stanza
     let sender = XMPP.getAttr "from" stanza
         tokens = words $ maybe "" id (XMPP.getMessageBody stanza)
     case sender of
@@ -96,19 +94,3 @@ waitForMessageXmpp = do
                   return $ MsgPlayerEnters (Just playerId) (jid2player jid)
           otherwise -> waitForMessageXmpp
   else waitForMessageXmpp
-
-stepToXmpp :: MonadHmud m => Address -> (World -> WorldAction -> m World)
-stepToXmpp sender = stepWorld (\msg -> do
-  case msg of
-    MsgInfo m ->
-      sendMessage sender m
-    MsgGoto fromRoom char toRoom -> do
-      mapM_ (\char -> sendMessage (charAddress char) $ describeMessage (charAddress char) msg)
-        $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
-    MsgTake char item ->
-      sendMessage sender $ (name char) ++ " takes " ++ (name item)
-    MsgPut char item ->
-      sendMessage sender $ (name char) ++ " puts down " ++ (name item)
-    MsgGive giver item receiver ->
-      sendMessage sender $ (name giver) ++ " gives " ++ (name item) ++ " to " ++ (name receiver)
-    )

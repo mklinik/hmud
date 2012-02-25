@@ -20,6 +20,7 @@ import Hmud.TestData
 import Hmud.Hmud
 import Hmud.Message
 import Hmud.Item
+import Hmud.Commands
 import Xmpp.Util
 
 player0 = Character

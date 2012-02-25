@@ -8,6 +8,7 @@ import Hmud.Room
 import Hmud.Character
 import Hmud.Item
 import Hmud.Message
+import Hmud.Hmud
 
 data CommandTag = Quit | Other
 
@@ -163,10 +164,20 @@ give playerId args world =
 -- the room see the message "Tom picked up Sword". If there is no such item to
 -- pick up, only the player will see the error message "There is no Sord here
 -- to pick up". The deliver callback is responsible to do this.
-stepWorld :: Monad m => (Message -> m ()) -> World -> WorldAction -> m World
-stepWorld deliver world action = do
+stepWorld :: MonadHmud m => Address -> World -> WorldAction -> m World
+stepWorld sender world action = do
   let (newWorld, message) = action world
-  deliver message
+
+  case message of
+    MsgInfo m -> sendMessage sender message
+    MsgGoto fromRoom char toRoom ->
+      mapM_ (\char -> sendMessage (charAddress char) message)
+        $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
+    MsgTake char item -> sendMessage sender message
+    MsgPut char item -> sendMessage sender message
+    MsgGive giver item receiver -> sendMessage sender message
+    MsgForge char item -> sendMessage sender message
+
   return newWorld
 
 commands :: [(String, Address -> [String] -> WorldAction)]
@@ -191,16 +202,24 @@ dispatch playerId tokens = do
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
                      ++ (intercalate ", " $ map fst cs)
 
-stepToStdout = stepWorld (\msg -> do
+run :: MonadHmud m => World -> m World
+run world = do
+  msg <- waitForMessage
   case msg of
-    MsgInfo m ->
-      putStrLn m
-    MsgGoto _ char room ->
-      putStrLn $ (name char) ++ " goes to " ++ (name room)
-    MsgTake char item ->
-      putStrLn $ (name char) ++ " takes " ++ (name item)
-    MsgPut char item ->
-      putStrLn $ (name char) ++ " puts down " ++ (name item)
-    MsgGive giver item receiver ->
-      putStrLn $ (name giver) ++ " gives " ++ (name item) ++ " to " ++ (name receiver)
-    )
+    MsgCommand playerId tokens -> case dispatch playerId tokens of
+          Nothing -> run world -- empty command
+          Just a  -> do
+            w2 <- stepWorld playerId world a
+            run w2
+    MsgPlayerEnters playerId playerName -> do
+      newWorld <- do
+        case findCharacter playerName world of
+          Left _ -> do
+              player <- mkRandomCharacter playerName playerId
+              newWorld <- stepWorld playerId world (insert player "The Black Unicorn")
+              debugOut ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
+              -- XMPP.sendGroupchatMessage groupchatJID ("Welcome " ++ (name player) ++ ", you are a " ++ (describe player))
+              return newWorld
+          Right _ -> return world -- TODO: should this be run world?
+      run newWorld
+    MsgExit -> return world

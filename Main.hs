@@ -11,28 +11,20 @@ import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
 
-loopWithWorld playerName world = do
-  putStr ">>> "
-  tokens <- fmap words getLine
-  case dispatch playerName tokens of
-    Nothing -> return ()
-    Just a  -> do w2 <- stepToStdout world a
-                  loopWithWorld playerName w2
-
 main = do
   player <- randomCharacter "Markus" $ Just "player"
   npc1 <- randomCharacter "Martin" $ Nothing
   npc2 <- randomCharacter "Karin" $ Nothing
   npc3 <- randomCharacter "Kathy" $ Nothing
 
-  w2 <- stepToStdout world (insert player "The Black Unicorn")
-  w3 <- stepToStdout w2 (insert npc1 "The Black Unicorn")
-  w4 <- stepToStdout w3 (insert npc2 "The Black Unicorn")
-  w5 <- stepToStdout w4 (insert npc3 "town square")
-  w6 <- stepToStdout w5 (insertItem scroll0 "ivory tower")
-  w7 <- stepToStdout w6 (insertItem beer "The Black Unicorn")
-  w8 <- stepToStdout w7 (insertItem scroll1 "The Black Unicorn")
+  w2 <- stepWorld Nothing world (insert player "The Black Unicorn")
+  w3 <- stepWorld Nothing w2 (insert npc1 "The Black Unicorn")
+  w4 <- stepWorld Nothing w3 (insert npc2 "The Black Unicorn")
+  w5 <- stepWorld Nothing w4 (insert npc3 "town square")
+  w6 <- stepWorld Nothing w5 (insertItem scroll0 "ivory tower")
+  w7 <- stepWorld Nothing w6 (insertItem beer "The Black Unicorn")
+  w8 <- stepWorld Nothing w7 (insertItem scroll1 "The Black Unicorn")
 
-  loopWithWorld (Just "player") w8
+  run w8
 
   putStrLn "bye."
