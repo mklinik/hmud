@@ -86,7 +86,7 @@ put playerId [] world =
 put playerId args world =
   case characterPutItem playerId (unwords args) world of
     Left err     -> (world, MsgInfo err)
-    Right (w, i) -> (w, MsgInfo $ "You drop " ++ (name i))
+    Right (w, c, i) -> (w, MsgPut c i)
 
 forge :: Address -> [String] -> WorldAction
 forge playerId args world =
@@ -178,7 +178,11 @@ stepWorld sender world action = do
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgPut char item -> sendMessage sender message
+    MsgPut char item -> do
+      case findRoomOfPlayerExactly (charAddress char) newWorld of
+        Left err -> debugOut err
+        Right room ->
+          mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
     MsgGive giver item receiver -> sendMessage sender message
     MsgForge char item -> sendMessage sender message
 

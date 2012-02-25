@@ -86,7 +86,7 @@ updateRoomInWorld newRoom world = do
   oldRoom <- findRoom (name newRoom) world
   Right $ world { worldRooms = newRoom : (delete oldRoom (worldRooms world)) }
 
-characterPutItem :: Address -> String -> World -> Either String (World, Item)
+characterPutItem :: Address -> String -> World -> Either String (World, Character, Item)
 characterPutItem playerId itName world = do
   oldRoom <- findRoomOfPlayerExactly playerId world
   oldChar <- findCharacterInRoomExactly playerId oldRoom
@@ -94,4 +94,4 @@ characterPutItem playerId itName world = do
   newRoom <- updateCharInRoom newChar oldRoom
   tmpWorld <- updateRoomInWorld newRoom world
   newWorld <- insertItemToRoom item (name newRoom) tmpWorld
-  Right (newWorld, item)
+  Right (newWorld, newChar, item)

@@ -3,7 +3,7 @@ module Hmud.Test where
 import Test.Hspec.HUnit
 import Test.Hspec
 import Test.HUnit
-import Data.Maybe (fromJust, isNothing)
+import Data.Maybe (fromJust, isNothing, isJust)
 import Data.Either.Unwrap
 import qualified Data.Map as Map
 import Data.Map (Map)
@@ -152,6 +152,28 @@ specs = descriptions
           let (_, MsgForge c it) = head $ List.filter (isMsgForge . snd) outputMsgs
           assertEqual "character forged something" "Hel Mut" (charName c)
           assertEqual "forged item is mug of beer" "mug of beer" (itemName it)
+      )
+    , it "three players join, one picks up the scroll and drops the scroll again"
+      ( TestCase $ do
+          let world2 = fromRight $ insertItemToRoom scroll1 "The Black Unicorn" world
+          let (world3, (inputMsgs, outputMsgs)) = State.runState (run world2) (
+                [ (MsgPlayerEnters (Just "player0") "Hel Mut")
+                , (MsgPlayerEnters (Just "player1") "Ara Gorn")
+                , (MsgPlayerEnters (Just "player2") "Bil Bo")
+                , (MsgCommand      (Just "player0") (words "take scroll"))
+                , (MsgCommand      (Just "player0") (words "put scroll"))
+                ], []::[TestStateOutgoing])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let takeMsgs = List.filter (isMsgTake . snd) outputMsgs
+          let putMsgs = List.filter (isMsgPut . snd) outputMsgs
+          assertEqual "we got three take messages" 3 (length takeMsgs)
+          assertEqual "we got three put messages" 3 (length putMsgs)
+          assertBool "one take message is to player0" $ isJust $ List.find (\(addr, _) -> addr == Just "player0") takeMsgs
+          assertBool "one take message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") takeMsgs
+          assertBool "one take message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") takeMsgs
+          assertBool "one put message is to player0" $ isJust $ List.find (\(addr, _) -> addr == Just "player0") putMsgs
+          assertBool "one put message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") putMsgs
+          assertBool "one put message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") putMsgs
       )
     ]
 
