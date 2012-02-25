@@ -31,6 +31,7 @@ player0 = Character
   , charLevel = 1
   , charInventory = []
   , charAddress = Just "player0addr"
+  , charId = "player0@localhost"
   }
 
 emptyWorld = World { worldRooms = [] }
@@ -114,7 +115,9 @@ specs = descriptions
   , describe "system tests"
     [ it "a player joins, and is put to The Black Unicorn"
       ( TestCase $ do
-          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) ([(MsgPlayerEnters (Just "player0") "Hel Mut")], []::[TestStateOutgoing], []::[String])
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [(MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
+                ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           assertEqual "player0 is in the Unicorn"
             "The Black Unicorn" (roomName (fromRight $ findRoomOfPlayerByAddress (Just "player0") newWorld))
@@ -122,7 +125,7 @@ specs = descriptions
     , it "a player joins, then goes to town square"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut")
+                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
                 , (MsgCommand      (Just "player0") (words "goto town square"))
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
@@ -138,7 +141,7 @@ specs = descriptions
       ( TestCase $ do
           let world2 = fromRight $ insertItemToRoom scroll1 "The Black Unicorn" world
           let (world3, (inputMsgs, outputMsgs, _)) = State.runState (run world2) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut")
+                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
                 , (MsgCommand      (Just "player0") (words "take scroll"))
                 , (MsgCommand      (Just "player0") (words "forge mug of beer $ hmmmmm, beer"))
                 ], []::[TestStateOutgoing], []::[String])
@@ -157,9 +160,9 @@ specs = descriptions
       ( TestCase $ do
           let world2 = fromRight $ insertItemToRoom scroll1 "The Black Unicorn" world
           let (world3, (inputMsgs, outputMsgs, _)) = State.runState (run world2) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut")
-                , (MsgPlayerEnters (Just "player1") "Ara Gorn")
-                , (MsgPlayerEnters (Just "player2") "Bil Bo")
+                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerEnters (Just "player2") "Bil Bo" "bil.bo@localhost")
                 , (MsgCommand      (Just "player0") (words "take scroll"))
                 , (MsgCommand      (Just "player0") (words "put scroll"))
                 ], []::[TestStateOutgoing], []::[String])
@@ -174,6 +177,21 @@ specs = descriptions
           assertBool "one put message is to player0" $ isJust $ List.find (\(addr, _) -> addr == Just "player0") putMsgs
           assertBool "one put message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") putMsgs
           assertBool "one put message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") putMsgs
+      )
+    , it "two players A and B enter. B exits and leaves its character behind. A changes it's nick to the nick of B, but must still control A's character."
+      ( TestCase $ do
+          let (world2, (inputMsgs, outputMsgs, debugs)) = State.runState (run world) (
+                [ (MsgPlayerEnters (Just "playerA") "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters (Just "playerB") "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerLeaves (Just "playerB"))
+                , (MsgPlayerEnters (Just "playerB") "Hel Mut" "hel.mut@localhost")
+                , (MsgCommand      (Just "playerB") (words "goto town"))
+                ], []::[TestStateOutgoing], []::[String])
+          mapM_ (hPutStrLn stderr) debugs
+          let unicorn = fromRight $ findRoom "The Black Unicorn" world2
+          let townSqr = fromRight $ findRoom "town square" world2
+          assertBool "Ara Gorn is still in The Unicorn" $ isRight $ findCharacterInRoom "Ara Gorn" unicorn
+          assertBool "Hel Mut went to town square" $ isRight $ findCharacterInRoom "Hel Mut" townSqr
       )
     ]
 

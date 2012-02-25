@@ -36,6 +36,7 @@ npc0 = Character
   , charLevel = 17
   , charInventory = []
   , charAddress = Nothing
+  , charId = "chris@localhost"
   }
 
 world = World { worldRooms = [tavern, townSquare, ivoryTower] }

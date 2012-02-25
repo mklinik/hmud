@@ -231,13 +231,29 @@ run world = do
           Just a  -> do
             w2 <- stepWorld playerId world a
             run w2
-    MsgPlayerEnters playerId playerName -> do
+    MsgPlayerEnters playerId playerName primKey -> do
       newWorld <- do
-        case findCharacter playerName world of
+        case findCharacterById primKey world of
           Left _ -> do
-              player <- mkRandomCharacter playerName playerId
-              newWorld <- stepWorld playerId world (insertNewPlayer player "The Black Unicorn")
-              return newWorld
-          Right _ -> return world
+            player <- mkRandomCharacter playerName playerId primKey
+            newWorld <- stepWorld playerId world (insertNewPlayer player "The Black Unicorn")
+            return newWorld
+          Right char -> case do
+              room <- findRoomOfPlayerById primKey world
+              let newChar = char { charAddress = playerId }
+              newRoom <- updateCharInRoom newChar room
+              updateRoomInWorld newRoom world
+            of
+              Left err -> debugOut err >> return world
+              Right newWorld -> return newWorld
       run newWorld
+    MsgPlayerLeaves playerId -> case do
+        room <- findRoomOfPlayerByAddress playerId world
+        char <- findCharacterInRoomByAddress playerId room
+        let newChar = char { charAddress = Nothing }
+        newRoom <- updateCharInRoom newChar room
+        updateRoomInWorld newRoom world
+      of
+        Left err -> debugOut err >> run world
+        Right newWorld -> run newWorld
     MsgExit -> return world

@@ -14,7 +14,7 @@ import Hmud.Describable
 class Monad m => MonadHmud m where
   waitForMessage :: m IncomingMessage
   sendMessage :: Address -> Message -> m ()
-  mkRandomCharacter :: String -> Address -> m Character
+  mkRandomCharacter :: String -> Address -> String -> m Character
   debugOut :: String -> m ()
 
 -- for testing only: maps a list of IncomingMessages to a list of outgoing Messages
@@ -28,7 +28,7 @@ instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing], [String])) wh
   sendMessage recv msg = do
     (ins, outs, debugs) <- State.get
     State.put (ins, outs ++ [(recv, msg)], debugs)
-  mkRandomCharacter name addr =
+  mkRandomCharacter name addr primKey =
       return Character { charName = name
                        , charRace = Human
                        , charRole = Wizard
@@ -36,6 +36,7 @@ instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing], [String])) wh
                        , charLevel = 42
                        , charInventory = []
                        , charAddress = addr
+                       , charId = primKey
                        }
   debugOut msg = do
     (ins, outs, debugs) <- State.get
@@ -50,5 +51,5 @@ instance MonadHmud IO where
       [] -> return MsgExit
       otherwise -> return $ MsgCommand (Just "player") tokens
   sendMessage addr msg = putStrLn $ describeMessage addr msg
-  mkRandomCharacter name addr = randomCharacter name addr
+  mkRandomCharacter = randomCharacter
   debugOut = putStrLn

@@ -56,7 +56,8 @@ data Character = Character
   , charGender :: Gender
   , charLevel :: Int
   , charInventory :: [Item]
-  , charAddress :: Address
+  , charAddress :: Address -- address may change
+  , charId :: String -- but Id always stays the same
   }
   deriving Eq
 

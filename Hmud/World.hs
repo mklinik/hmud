@@ -56,10 +56,24 @@ findRoomOfPlayerByAddress playerId world =
     r:[]      -> Right r
     otherwise -> Left $ "ambiguous character name: " ++ (show playerId) -- should never happen
 
+findRoomOfPlayerById :: String -> World -> Either String Room
+findRoomOfPlayerById playerId world =
+  case filter (roomHasCharacterById playerId) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ (show playerId)
+    r:[]      -> Right r
+    otherwise -> Left $ "ambiguous character name: " ++ (show playerId) -- should never happen
+
 -- Assuming that player names are unique, if we find any players at all, we only find one
 findCharacterByAddress :: Address -> World -> Either String Character
 findCharacterByAddress playerId world =
   case rights $ map (findCharacterInRoomByAddress playerId) (worldRooms world) of
+    []        -> Left $ "no such character: " ++ (show playerId)
+    p:[]      -> Right p
+    otherwise -> Left $ "ambiguous character name: " ++ (show playerId)
+
+findCharacterById :: String -> World -> Either String Character
+findCharacterById playerId world =
+  case rights $ map (findCharacterInRoomById playerId) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerId)
     p:[]      -> Right p
     otherwise -> Left $ "ambiguous character name: " ++ (show playerId)

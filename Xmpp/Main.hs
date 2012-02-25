@@ -53,7 +53,7 @@ instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
   sendMessage Nothing _ = return ()
   sendMessage (Just addr) msg = XMPP.sendMessage addr $ describeMessage (Just addr) msg
-  mkRandomCharacter name addr = XMPP.liftIO $ randomCharacter name addr
+  mkRandomCharacter name addr primKey = XMPP.liftIO $ randomCharacter name addr primKey
   debugOut str = XMPP.liftIO $ putStrLn str
 
 waitForMessageXmpp :: XMPP IncomingMessage
@@ -79,6 +79,6 @@ waitForMessageXmpp = do
               Just jid -> if (jid == botJID)
                 then waitForMessageXmpp -- filter presence msg from myself
                 else do
-                  return $ MsgPlayerEnters (Just playerId) (jid2player jid)
+                  return $ MsgPlayerEnters (Just playerId) (jid2player jid) (jid2primKey jid)
           otherwise -> waitForMessageXmpp
   else waitForMessageXmpp

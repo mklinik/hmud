@@ -54,9 +54,20 @@ findCharacterInRoomByAddress playerId room =
     Right
     (find (\char -> playerId == (charAddress char)) (roomCharacters room))
 
+findCharacterInRoomById :: String -> Room -> Either String Character
+findCharacterInRoomById playerId room =
+  maybe
+    (Left $ "no character " ++ (show playerId) ++ " in " ++ (roomName room))
+    Right
+    (find (\char -> playerId == (charId char)) (roomCharacters room))
+
 roomHasCharacterByAddress :: Address -> Room -> Bool
 roomHasCharacterByAddress playerId room =
   either (const False) (const True) $ findCharacterInRoomByAddress playerId room
+
+roomHasCharacterById :: String -> Room -> Bool
+roomHasCharacterById playerId room =
+  either (const False) (const True) $ findCharacterInRoomById playerId room
 
 roomEnter :: Character -> Room -> Room
 roomEnter char room = room { roomCharacters = char:(roomCharacters room) }
@@ -81,5 +92,5 @@ removeItemFromRoom itName room = do
 
 updateCharInRoom :: Character -> Room -> Either String Room
 updateCharInRoom newChar room = do
-  oldChar <- findCharacterInRoomByAddress (charAddress newChar) room
+  oldChar <- findCharacterInRoomById (charId newChar) room
   Right $ room { roomCharacters = newChar : (delete oldChar (roomCharacters room)) }
