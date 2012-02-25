@@ -64,13 +64,13 @@ waitForMessageXmpp = do
         tokens = words $ maybe "" id (XMPP.getMessageBody stanza)
     case sender of
       Nothing -> waitForMessageXmpp
-      Just playerId | playerId == botJID -> waitForMessageXmpp
-      Just playerId -> return $ MsgCommand (Just playerId) tokens
+      Just playerAddr | playerAddr == botJID -> waitForMessageXmpp
+      Just playerAddr -> return $ MsgCommand (Just playerAddr) tokens
   else if XMPP.isGroupchatPresence stanza then do
     let sender = XMPP.getAttr "from" stanza
     case sender of
       Nothing -> waitForMessageXmpp
-      Just playerId -> do
+      playerAddr -> do
         let (presence, occupant) = XMPP.doGroupchatPresence stanza
         case presence of
           XMPP.RoleChange _ -> do -- a user has joined or changed nick
@@ -79,6 +79,6 @@ waitForMessageXmpp = do
               Just jid -> if (jid == botJID)
                 then waitForMessageXmpp -- filter presence msg from myself
                 else do
-                  return $ MsgPlayerEnters (Just playerId) (jid2player jid) (jid2primKey jid)
+                  return $ MsgPlayerEnters playerAddr (jid2player jid) (jid2primKey jid)
           otherwise -> waitForMessageXmpp
   else waitForMessageXmpp

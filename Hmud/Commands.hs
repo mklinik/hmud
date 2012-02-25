@@ -31,10 +31,10 @@ insertItem item toName world =
     Right w  -> (w, MsgInfo $ (name item) ++ " is now in " ++ toName)
 
 goto :: Address -> [String] -> WorldAction
-goto playerId args world =
-  case findRoomOfPlayerByAddress playerId world of
+goto playerAddr args world =
+  case findRoomOfPlayerByAddress playerAddr world of
     Left err -> (world, MsgInfo err)
-    Right r  -> case gotoFromTo playerId (name r) arg world of
+    Right r  -> case gotoFromTo playerAddr (name r) arg world of
                     Left err        -> (world, MsgInfo err)
                     Right (w, fromRoom, char, toRoom) -> (w, MsgGoto fromRoom char toRoom)
   where arg = unwords args
@@ -47,26 +47,26 @@ goto playerId args world =
 --   3) an item in the current players inventory
 describeThing :: Room -> String -> Address -> String
 describeThing room [] _ = "This is " ++ (name room) ++ ", " ++ (describe room)
-describeThing room arg playerId =
+describeThing room arg playerAddr =
   case findCharacterInRoom arg room of
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
     Left err ->
       case findItemInRoom arg room of
         Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
-        Left err -> case findCharacterInRoomByAddress playerId room of
+        Left err -> case findCharacterInRoomByAddress playerAddr room of
           Right p  -> case characterFindItem arg p of
             Right i  -> "You see " ++ (name i) ++ ", " ++ (describe i)
             Left err -> "you can't see " ++ arg
           Left err -> "you can't see " ++ arg
 
 lookAt :: Address -> [String] -> WorldAction
-lookAt playerId args world =
-  case findRoomOfPlayerByAddress playerId world of
+lookAt playerAddr args world =
+  case findRoomOfPlayerByAddress playerAddr world of
     Left err -> (world, MsgInfo err)
-    Right r  -> (world, MsgInfo $ describeThing r (unwords args) playerId)
+    Right r  -> (world, MsgInfo $ describeThing r (unwords args) playerAddr)
 
 inventory :: Address -> [String] -> WorldAction
-inventory playerId _ world = case findCharacterByAddress playerId world of
+inventory playerAddr _ world = case findCharacterByAddress playerAddr world of
   Left err   -> (world, MsgInfo err)
   Right char -> (world, MsgInfo $ if null $ charInventory char
                           then "Your bag of swag is empty."
@@ -74,34 +74,34 @@ inventory playerId _ world = case findCharacterByAddress playerId world of
                 )
 
 pickup :: Address -> [String] -> WorldAction
-pickup playerId [] world =
+pickup playerAddr [] world =
     (world, MsgInfo $ "You take nothing.")
-pickup playerId args world =
-  case characterPickupItem playerId (unwords args) world of
+pickup playerAddr args world =
+  case characterPickupItem playerAddr (unwords args) world of
     Left err     -> (world, MsgInfo err)
     Right (w, c, i) -> (w, MsgTake c i)
 
 put :: Address -> [String] -> WorldAction
-put playerId [] world =
+put playerAddr [] world =
     (world, MsgInfo "You drop nothing.")
-put playerId args world =
-  case characterPutItem playerId (unwords args) world of
+put playerAddr args world =
+  case characterPutItem playerAddr (unwords args) world of
     Left err     -> (world, MsgInfo err)
     Right (w, c, i) -> (w, MsgPut c i)
 
 forge :: Address -> [String] -> WorldAction
-forge playerId args world =
+forge playerAddr args world =
   let (name_, desc_) = span (\x -> x /= "$") args
   in
     if (length name_ > 0 && length desc_ > 1)
       then let description = unwords $ tail desc_
                itName = unwords name_
            in
-             case do char <- findCharacterByAddress playerId world
+             case do char <- findCharacterByAddress playerAddr world
                      _ <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
                      let item = (Item { itemName = itName, itemDescription = description })
                      let newChar = giveItemToCharacter item char
-                     room <- findRoomOfPlayerByAddress playerId world
+                     room <- findRoomOfPlayerByAddress playerAddr world
                      newRoom <- updateCharInRoom newChar room
                      newWorld <- updateRoomInWorld newRoom world
                      return (newWorld, char, item)
@@ -111,12 +111,12 @@ forge playerId args world =
       else (world, MsgInfo $ "usage: forge <item-name> $ <item-description>")
 
 discard :: Address -> [String] -> WorldAction
-discard playerId [] world = do
+discard playerAddr [] world = do
     (world, MsgInfo "You discard nothing.")
-discard playerId args world =
+discard playerAddr args world =
   case do
-    oldRoom <- findRoomOfPlayerByAddress playerId world
-    oldChar <- findCharacterInRoomByAddress playerId oldRoom
+    oldRoom <- findRoomOfPlayerByAddress playerAddr world
+    oldChar <- findCharacterInRoomByAddress playerAddr oldRoom
     (newChar, item) <- removeItemFromInventory (unwords args) oldChar
     newRoom <- updateCharInRoom newChar oldRoom
     newWorld <- updateRoomInWorld newRoom world
@@ -127,15 +127,15 @@ discard playerId args world =
 
 -- syntax: give <item-name> to <player-name>
 give :: Address -> [String] -> WorldAction
-give playerId args world =
+give playerAddr args world =
   let (itName_, receiverName_) = span (\x -> x /= "to") args
   in
     if (length itName_ > 0 && length receiverName_ > 1)
       then let receiverName = unwords $ tail receiverName_
                itName = unwords itName_
            in
-             case do char <- findCharacterByAddress playerId world
-                     room <- findRoomOfPlayerByAddress playerId world
+             case do char <- findCharacterByAddress playerAddr world
+                     room <- findRoomOfPlayerByAddress playerAddr world
                      receiver <- findCharacterInRoom receiverName room
                      if char == receiver then Left "You give the item to yourself." else do
                          (newChar, item) <- removeItemFromInventory itName char
@@ -150,7 +150,7 @@ give playerId args world =
       else (world, MsgInfo "usage: give <item-name> to <player-name>")
 
 help :: Address -> [String] -> WorldAction
-help playerId args world
+help playerAddr args world
   | args == ["commands"] = (world, MsgInfo $ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
   | otherwise = (world, MsgInfo $ "Welcome to The World. Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
   )
@@ -213,12 +213,12 @@ commands =
   ]
 
 dispatch :: Address -> [String] -> Maybe WorldAction
-dispatch playerId tokens = do
+dispatch playerAddr tokens = do
   case tokens of
     []             -> Nothing
     (command:args) -> case (filter (\(cname, _, _) -> command `isPrefixOf` cname) commands) of
       []   -> Just $ idWorldAction $ "no such command: " ++ command ++ ". Type \"help commands\" to get a list of what you can do"
-      (_, c, _):[] -> Just $ c playerId args
+      (_, c, _):[] -> Just $ c playerAddr args
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
                      ++ (intercalate ", " $ map (\(cname, _, _) -> cname) cs)
 
@@ -226,30 +226,30 @@ run :: MonadHmud m => World -> m World
 run world = do
   msg <- waitForMessage
   case msg of
-    MsgCommand playerId tokens -> case dispatch playerId tokens of
+    MsgCommand playerAddr tokens -> case dispatch playerAddr tokens of
           Nothing -> run world -- empty command
           Just a  -> do
-            w2 <- stepWorld playerId world a
+            w2 <- stepWorld playerAddr world a
             run w2
-    MsgPlayerEnters playerId playerName primKey -> do
+    MsgPlayerEnters playerAddr playerName primKey -> do
       newWorld <- do
         case findCharacterById primKey world of
           Left _ -> do
-            player <- mkRandomCharacter playerName playerId primKey
-            newWorld <- stepWorld playerId world (insertNewPlayer player "The Black Unicorn")
+            player <- mkRandomCharacter playerName playerAddr primKey
+            newWorld <- stepWorld playerAddr world (insertNewPlayer player "The Black Unicorn")
             return newWorld
           Right char -> case do
               room <- findRoomOfPlayerById primKey world
-              let newChar = char { charAddress = playerId }
+              let newChar = char { charAddress = playerAddr }
               newRoom <- updateCharInRoom newChar room
               updateRoomInWorld newRoom world
             of
               Left err -> debugOut err >> return world
               Right newWorld -> return newWorld
       run newWorld
-    MsgPlayerLeaves playerId -> case do
-        room <- findRoomOfPlayerByAddress playerId world
-        char <- findCharacterInRoomByAddress playerId room
+    MsgPlayerLeaves playerAddr -> case do
+        room <- findRoomOfPlayerByAddress playerAddr world
+        char <- findCharacterInRoomByAddress playerAddr room
         let newChar = char { charAddress = Nothing }
         newRoom <- updateCharInRoom newChar room
         updateRoomInWorld newRoom world

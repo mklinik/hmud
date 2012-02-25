@@ -48,11 +48,11 @@ findCharacterInRoom playerName room = maybe (Left $ "no character " ++ playerNam
   $ find (\char -> playerName `isPrefixOf` (charName char)) (roomCharacters room)
 
 findCharacterInRoomByAddress :: Address -> Room -> Either String Character
-findCharacterInRoomByAddress playerId room =
+findCharacterInRoomByAddress playerAddr room =
   maybe
-    (Left $ "no character " ++ (show playerId) ++ " in " ++ (roomName room))
+    (Left $ "no character " ++ (show playerAddr) ++ " in " ++ (roomName room))
     Right
-    (find (\char -> playerId == (charAddress char)) (roomCharacters room))
+    (find (\char -> playerAddr == (charAddress char)) (roomCharacters room))
 
 findCharacterInRoomById :: String -> Room -> Either String Character
 findCharacterInRoomById playerId room =
@@ -62,8 +62,8 @@ findCharacterInRoomById playerId room =
     (find (\char -> playerId == (charId char)) (roomCharacters room))
 
 roomHasCharacterByAddress :: Address -> Room -> Bool
-roomHasCharacterByAddress playerId room =
-  either (const False) (const True) $ findCharacterInRoomByAddress playerId room
+roomHasCharacterByAddress playerAddr room =
+  either (const False) (const True) $ findCharacterInRoomByAddress playerAddr room
 
 roomHasCharacterById :: String -> Room -> Bool
 roomHasCharacterById playerId room =
