@@ -5,7 +5,7 @@ import qualified Random
 import Hmud.Character
 import Data.Char
 
-homepageURL = "https://github.com/mklinik/hmud"
+homepageURL = "http://mklinik.github.com/hmud"
 
 randomEnum :: forall a. (Enum a, Bounded a) => IO a
 randomEnum = do
