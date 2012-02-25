@@ -78,7 +78,7 @@ pickup playerId [] world =
 pickup playerId args world =
   case characterPickupItem playerId (unwords args) world of
     Left err     -> (world, MsgInfo err)
-    Right (w, i) -> (w, MsgInfo $ "You take " ++ (name i))
+    Right (w, c, i) -> (w, MsgTake c i)
 
 put :: Address -> [String] -> WorldAction
 put playerId [] world =
@@ -173,7 +173,11 @@ stepWorld sender world action = do
     MsgGoto fromRoom char toRoom ->
       mapM_ (\char -> sendMessage (charAddress char) message)
         $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
-    MsgTake char item -> sendMessage sender message
+    MsgTake char item -> do
+      case findRoomOfPlayerExactly (charAddress char) newWorld of
+        Left err -> debugOut err
+        Right room ->
+          mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
     MsgPut char item -> sendMessage sender message
     MsgGive giver item receiver -> sendMessage sender message
     MsgForge char item -> sendMessage sender message

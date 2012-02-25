@@ -71,7 +71,7 @@ findCharacter playerName world =
     p:[]      -> Right p
     otherwise -> Left $ "ambiguous character name: " ++ (show playerName)
 
-characterPickupItem :: Address -> String -> World -> Either String (World, Item)
+characterPickupItem :: Address -> String -> World -> Either String (World, Character, Item)
 characterPickupItem playerId itName world = do
   oldRoom <- findRoomOfPlayerExactly playerId world
   oldChar <- findCharacterInRoomExactly playerId oldRoom
@@ -79,7 +79,7 @@ characterPickupItem playerId itName world = do
   let newChar = giveItemToCharacter item oldChar
   newRoom <- updateCharInRoom newChar tmpRoom
   newWorld <- updateRoomInWorld newRoom world
-  Right (newWorld, item)
+  Right (newWorld, newChar, item)
 
 updateRoomInWorld :: Room -> World -> Either String World
 updateRoomInWorld newRoom world = do

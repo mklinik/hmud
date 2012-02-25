@@ -143,6 +143,7 @@ specs = descriptions
                 , (MsgCommand      (Just "player0") (words "forge mug of beer $ hmmmmm, beer"))
                 ], []::[Message])
           assertBool "input messages are all consumed" $ null inputMsgs
+          assertEqual "we got exactly one take message" 1 (length $ List.filter isMsgTake outputMsgs)
           let room = fromRight $ findRoomOfPlayerExactly (Just "player0") world3
           assertBool "scroll is not in the room" $ isLeft $ findItemInRoom "scroll of forgery" room
           let char = fromRight $ findCharacterExactly (Just "player0") world3
