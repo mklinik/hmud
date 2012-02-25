@@ -114,7 +114,7 @@ specs = descriptions
   , describe "system tests"
     [ it "a player joins, and is put to The Black Unicorn"
       ( TestCase $ do
-          let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) ([(MsgPlayerEnters (Just "player0") "Hel Mut")], []::[Message])
+          let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) ([(MsgPlayerEnters (Just "player0") "Hel Mut")], []::[TestStateOutgoing])
           assertBool "input messages are all consumed" $ null inputMsgs
           assertEqual "player0 is in the Unicorn"
             "The Black Unicorn" (roomName (fromRight $ findRoomOfPlayerExactly (Just "player0") newWorld))
@@ -124,12 +124,12 @@ specs = descriptions
           let (newWorld, (inputMsgs, outputMsgs)) = State.runState (run world) (
                 [ (MsgPlayerEnters (Just "player0") "Hel Mut")
                 , (MsgCommand      (Just "player0") (words "goto town square"))
-                ], []::[Message])
+                ], []::[TestStateOutgoing])
           assertBool "input messages are all consumed" $ null inputMsgs
           let room = fromRight $ findRoomOfPlayerExactly (Just "player0") newWorld
           assertEqual "player0 is in town square" "town square" (roomName room)
           let player = fromRight $ findCharacterInRoomExactly (Just "player0") room
-          let (MsgGoto fromRoom char toRoom) = head $ List.filter isMsgGoto outputMsgs
+          let (_, MsgGoto fromRoom char toRoom) = head $ List.filter (isMsgGoto . snd) outputMsgs
           assertEqual "fromRoom is the Unicorn" "The Black Unicorn" (roomName fromRoom)
           assertEqual "player is Hel Mut" "Hel Mut" (charName char)
           assertEqual "toRoom is town square" "town square" (roomName toRoom)
@@ -141,15 +141,15 @@ specs = descriptions
                 [ (MsgPlayerEnters (Just "player0") "Hel Mut")
                 , (MsgCommand      (Just "player0") (words "take scroll"))
                 , (MsgCommand      (Just "player0") (words "forge mug of beer $ hmmmmm, beer"))
-                ], []::[Message])
+                ], []::[TestStateOutgoing])
           assertBool "input messages are all consumed" $ null inputMsgs
-          assertEqual "we got exactly one take message" 1 (length $ List.filter isMsgTake outputMsgs)
+          assertEqual "we got exactly one take message" 1 (length $ List.filter (isMsgTake . snd) outputMsgs)
           let room = fromRight $ findRoomOfPlayerExactly (Just "player0") world3
           assertBool "scroll is not in the room" $ isLeft $ findItemInRoom "scroll of forgery" room
           let char = fromRight $ findCharacterExactly (Just "player0") world3
           assertBool "scroll is in the players inventory" $ isRight $ characterFindItem "scroll of forgery" char
           assertBool "beer is in the players inventory" $ isRight $ characterFindItem "mug of beer" char
-          let (MsgForge c it) = head $ List.filter isMsgForge outputMsgs
+          let (_, MsgForge c it) = head $ List.filter (isMsgForge . snd) outputMsgs
           assertEqual "character forged something" "Hel Mut" (charName c)
           assertEqual "forged item is mug of beer" "mug of beer" (itemName it)
       )
