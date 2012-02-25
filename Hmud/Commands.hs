@@ -32,7 +32,7 @@ insertItem item toName world =
 
 goto :: Address -> [String] -> WorldAction
 goto playerId args world =
-  case findRoomOfPlayerExactly playerId world of
+  case findRoomOfPlayerByAddress playerId world of
     Left err -> (world, MsgInfo err)
     Right r  -> case gotoFromTo playerId (name r) arg world of
                     Left err        -> (world, MsgInfo err)
@@ -53,7 +53,7 @@ describeThing room arg playerId =
     Left err ->
       case findItemInRoom arg room of
         Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
-        Left err -> case findCharacterInRoomExactly playerId room of
+        Left err -> case findCharacterInRoomByAddress playerId room of
           Right p  -> case characterFindItem arg p of
             Right i  -> "You see " ++ (name i) ++ ", " ++ (describe i)
             Left err -> "you can't see " ++ arg
@@ -61,12 +61,12 @@ describeThing room arg playerId =
 
 lookAt :: Address -> [String] -> WorldAction
 lookAt playerId args world =
-  case findRoomOfPlayerExactly playerId world of
+  case findRoomOfPlayerByAddress playerId world of
     Left err -> (world, MsgInfo err)
     Right r  -> (world, MsgInfo $ describeThing r (unwords args) playerId)
 
 inventory :: Address -> [String] -> WorldAction
-inventory playerId _ world = case findCharacterExactly playerId world of
+inventory playerId _ world = case findCharacterByAddress playerId world of
   Left err   -> (world, MsgInfo err)
   Right char -> (world, MsgInfo $ if null $ charInventory char
                           then "Your bag of swag is empty."
@@ -97,11 +97,11 @@ forge playerId args world =
       then let description = unwords $ tail desc_
                itName = unwords name_
            in
-             case do char <- findCharacterExactly playerId world
+             case do char <- findCharacterByAddress playerId world
                      _ <- characterFindItem "scroll of forgery" char -- if this fails, the whole command fails
                      let item = (Item { itemName = itName, itemDescription = description })
                      let newChar = giveItemToCharacter item char
-                     room <- findRoomOfPlayerExactly playerId world
+                     room <- findRoomOfPlayerByAddress playerId world
                      newRoom <- updateCharInRoom newChar room
                      newWorld <- updateRoomInWorld newRoom world
                      return (newWorld, char, item)
@@ -115,8 +115,8 @@ discard playerId [] world = do
     (world, MsgInfo "You discard nothing.")
 discard playerId args world =
   case do
-    oldRoom <- findRoomOfPlayerExactly playerId world
-    oldChar <- findCharacterInRoomExactly playerId oldRoom
+    oldRoom <- findRoomOfPlayerByAddress playerId world
+    oldChar <- findCharacterInRoomByAddress playerId oldRoom
     (newChar, item) <- removeItemFromInventory (unwords args) oldChar
     newRoom <- updateCharInRoom newChar oldRoom
     newWorld <- updateRoomInWorld newRoom world
@@ -134,8 +134,8 @@ give playerId args world =
       then let receiverName = unwords $ tail receiverName_
                itName = unwords itName_
            in
-             case do char <- findCharacterExactly playerId world
-                     room <- findRoomOfPlayerExactly playerId world
+             case do char <- findCharacterByAddress playerId world
+                     room <- findRoomOfPlayerByAddress playerId world
                      receiver <- findCharacterInRoom receiverName room
                      if char == receiver then Left "You give the item to yourself." else do
                          (newChar, item) <- removeItemFromInventory itName char
@@ -181,17 +181,17 @@ stepWorld sender world action = do
       mapM_ (\char -> sendMessage (charAddress char) message)
         $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
     MsgTake char item -> do
-      case findRoomOfPlayerExactly (charAddress char) newWorld of
+      case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
     MsgPut char item -> do
-      case findRoomOfPlayerExactly (charAddress char) newWorld of
+      case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
     MsgGive giver item receiver -> do
-      case findRoomOfPlayerExactly (charAddress giver) newWorld of
+      case findRoomOfPlayerByAddress (charAddress giver) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)

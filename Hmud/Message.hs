@@ -47,8 +47,8 @@ describeMessage :: Address -> Message -> String
 describeMessage _ (MsgInfo text) = text
 describeMessage receiver (MsgGoto fromRoom char toRoom)
   | receiver == (charAddress char) = "You are now in " ++ (name toRoom) ++ ", " ++ (describe toRoom)
-  | roomHasCharacterExactly receiver fromRoom = (name char) ++ " leaves."
-  | roomHasCharacterExactly receiver toRoom   = (name char) ++ " enters."
+  | roomHasCharacterByAddress receiver fromRoom = (name char) ++ " leaves."
+  | roomHasCharacterByAddress receiver toRoom   = (name char) ++ " enters."
   | otherwise = (name char) ++ " goes to " ++ (name toRoom) -- should never happen
 describeMessage receiver (MsgTake char item)
   | receiver == (charAddress char) = "You take " ++ (doArticleMagic $ name item)

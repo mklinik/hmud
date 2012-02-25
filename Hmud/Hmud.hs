@@ -19,15 +19,15 @@ class Monad m => MonadHmud m where
 
 -- for testing only: maps a list of IncomingMessages to a list of outgoing Messages
 type TestStateOutgoing = (Address, Message)
-instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing])) where
+instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing], [String])) where
   waitForMessage = do
-    (ins, outs) <- State.get
+    (ins, outs, debugs) <- State.get
     case ins of
       [] -> return MsgExit
-      (m:ms) -> State.put (ms, outs) >> return m
+      (m:ms) -> State.put (ms, outs, debugs) >> return m
   sendMessage recv msg = do
-    (ins, outs) <- State.get
-    State.put (ins, outs ++ [(recv, msg)])
+    (ins, outs, debugs) <- State.get
+    State.put (ins, outs ++ [(recv, msg)], debugs)
   mkRandomCharacter name addr =
       return Character { charName = name
                        , charRace = Human
@@ -37,7 +37,9 @@ instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing])) where
                        , charInventory = []
                        , charAddress = addr
                        }
-  debugOut _ = return ()
+  debugOut msg = do
+    (ins, outs, debugs) <- State.get
+    State.put (ins, outs, debugs ++ [msg])
 
 instance MonadHmud IO where
   waitForMessage = do

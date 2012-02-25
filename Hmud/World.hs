@@ -41,7 +41,7 @@ gotoFromTo playerId fromName toName world = do
         then (Left "You are already there.")
         else do
           let remainingRooms = delete toRoom $ delete fromRoom (worldRooms world)
-          player <- findCharacterInRoomExactly playerId fromRoom
+          player <- findCharacterInRoomByAddress playerId fromRoom
           let newFromRoom = fromRoom { roomCharacters = delete player (roomCharacters fromRoom) }
           let newToRoom   = toRoom   { roomCharacters = player:(roomCharacters toRoom) }
           Right (world { worldRooms = newFromRoom:newToRoom:remainingRooms }, newFromRoom, player, newToRoom)
@@ -49,17 +49,17 @@ gotoFromTo playerId fromName toName world = do
 worldSummary :: World -> String
 worldSummary world = intercalate "\n" (map roomSummary (worldRooms world))
 
-findRoomOfPlayerExactly :: Address -> World -> Either String Room
-findRoomOfPlayerExactly playerId world =
-  case filter (roomHasCharacterExactly playerId) (worldRooms world) of
+findRoomOfPlayerByAddress :: Address -> World -> Either String Room
+findRoomOfPlayerByAddress playerId world =
+  case filter (roomHasCharacterByAddress playerId) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerId)
     r:[]      -> Right r
     otherwise -> Left $ "ambiguous character name: " ++ (show playerId) -- should never happen
 
 -- Assuming that player names are unique, if we find any players at all, we only find one
-findCharacterExactly :: Address -> World -> Either String Character
-findCharacterExactly playerId world =
-  case rights $ map (findCharacterInRoomExactly playerId) (worldRooms world) of
+findCharacterByAddress :: Address -> World -> Either String Character
+findCharacterByAddress playerId world =
+  case rights $ map (findCharacterInRoomByAddress playerId) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerId)
     p:[]      -> Right p
     otherwise -> Left $ "ambiguous character name: " ++ (show playerId)
@@ -73,8 +73,8 @@ findCharacter playerName world =
 
 characterPickupItem :: Address -> String -> World -> Either String (World, Character, Item)
 characterPickupItem playerId itName world = do
-  oldRoom <- findRoomOfPlayerExactly playerId world
-  oldChar <- findCharacterInRoomExactly playerId oldRoom
+  oldRoom <- findRoomOfPlayerByAddress playerId world
+  oldChar <- findCharacterInRoomByAddress playerId oldRoom
   (tmpRoom, item) <- removeItemFromRoom itName oldRoom
   let newChar = giveItemToCharacter item oldChar
   newRoom <- updateCharInRoom newChar tmpRoom
@@ -88,8 +88,8 @@ updateRoomInWorld newRoom world = do
 
 characterPutItem :: Address -> String -> World -> Either String (World, Character, Item)
 characterPutItem playerId itName world = do
-  oldRoom <- findRoomOfPlayerExactly playerId world
-  oldChar <- findCharacterInRoomExactly playerId oldRoom
+  oldRoom <- findRoomOfPlayerByAddress playerId world
+  oldChar <- findCharacterInRoomByAddress playerId oldRoom
   (newChar, item) <- removeItemFromInventory itName oldChar
   newRoom <- updateCharInRoom newChar oldRoom
   tmpWorld <- updateRoomInWorld newRoom world
