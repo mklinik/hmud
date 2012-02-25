@@ -52,7 +52,7 @@ describeMessage receiver (MsgTake char item)
   | receiver == (charAddress char) = "You take " ++ (name item)
   | otherwise = (name char) ++ " takes " ++ (name item)
 describeMessage receiver (MsgForge char item)
-  | receiver == (charAddress char) = "You forge " ++ (name item)
+  | receiver == (charAddress char) = "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, " ++ (name item) ++ " hovers in the air before you, then floats slowly into your hands."
   | otherwise = (name char) ++ " forges " ++ (name item)
 describeMessage receiver (MsgPut char item)
   | receiver == (charAddress char) = "You put " ++ (name item) ++ " down."
@@ -63,4 +63,3 @@ describeMessage receiver (MsgGive giver item givee)
   | otherwise = (name giver) ++ " gives " ++ (name item) ++ " to " ++ (name givee)
 
 
--- $ "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands."
