@@ -20,7 +20,7 @@ import Hmud.TestData
 import Hmud.Hmud
 import Hmud.Message
 import Hmud.Item
-import Xmpp.Users
+import Xmpp.Util
 
 player0 = Character
   { charName = "player0"
@@ -107,19 +107,6 @@ specs = descriptions
       (jid2player "gtf@conference.localhost/markus.klinik" == "Markus Klinik")
     , it "returns the capitalized username for personal JIDs"
       (jid2player "markus.klinik@localhost/Gajim" == "Markus Klinik")
-    ]
-  , describe "updateNick"
-    [ it "works when a second mapping is added"
-      ( TestCase $ do
-          let (nicks, _) = updateNick "foobar" "markus.klinik@localhost/Gajim" (Map.empty, Map.empty)
-          assertBool "foobar is mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks) == "markus.klinik@localhost/Gajim"
-          let (nicks2, _) = updateNick "blah" "hans.wurst@localhost/Gajim" (nicks, Map.empty)
-          assertBool "foobar is still mapped to mkl" $ (fromJust $ Map.lookup "foobar" nicks2) == "markus.klinik@localhost/Gajim"
-          assertBool "blah is mapped to hans" $ (fromJust $ Map.lookup "blah" nicks2) == "hans.wurst@localhost/Gajim"
-          let (nicks3, _) = updateNick "mkl" "markus.klinik@localhost/Gajim" (nicks2, Map.empty)
-          assertBool "markus has now nick mkl" $ (fromJust $ Map.lookup "mkl" nicks3) == "markus.klinik@localhost/Gajim"
-          assertBool "nick foobar no longer exists" $ (isNothing $ Map.lookup "foobar" nicks3)
-      )
     ]
 
   -- system tests, maps input messages to output messages

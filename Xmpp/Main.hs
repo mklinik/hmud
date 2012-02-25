@@ -19,7 +19,7 @@ import Hmud.TestData
 import Hmud.Commands
 import Hmud.Message
 import Hmud.Hmud
-import Xmpp.Users
+import Xmpp.Util
 
 -- The bot's JID is "bot@example.com"
 botUsername = "markus.klinik"
