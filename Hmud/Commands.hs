@@ -142,10 +142,10 @@ give playerId args world =
                          tmpRoom <- updateCharInRoom newChar room
                          newRoom <- updateCharInRoom newReceiver tmpRoom
                          newWorld <- updateRoomInWorld newRoom world
-                         Right (newWorld, newReceiver, item)
+                         Right (newWorld, newChar, item, newReceiver)
              of
                Left err -> (world, MsgInfo err)
-               Right (w, recv, item)  -> (w, MsgInfo $ "You give " ++ (name item) ++ " to " ++ (name recv))
+               Right (w, giver, item, givee)  -> (w, MsgGive giver item givee)
       else (world, MsgInfo "usage: give <item-name> to <player-name>")
 
 -- main loop:
@@ -183,7 +183,11 @@ stepWorld sender world action = do
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgGive giver item receiver -> sendMessage sender message
+    MsgGive giver item receiver -> do
+      case findRoomOfPlayerExactly (charAddress giver) newWorld of
+        Left err -> debugOut err
+        Right room ->
+          mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
     MsgForge char item -> sendMessage sender message
 
   return newWorld

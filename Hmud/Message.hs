@@ -34,6 +34,9 @@ isMsgTake _ = False
 isMsgPut (MsgPut _ _) = True
 isMsgPut _ = False
 
+isMsgGive (MsgGive _ _ _) = True
+isMsgGive _ = False
+
 isMsgForge (MsgForge _ _) = True
 isMsgForge _ = False
 
@@ -54,8 +57,10 @@ describeMessage receiver (MsgForge char item)
 describeMessage receiver (MsgPut char item)
   | receiver == (charAddress char) = "You put " ++ (name item) ++ " down."
   | otherwise = (name char) ++ " puts " ++ (name item) ++ " down."
-describeMessage _ msg = show msg
+describeMessage receiver (MsgGive giver item givee)
+  | receiver == (charAddress giver) = "You give " ++ (name item) ++ " to " ++ (name givee)
+  | receiver == (charAddress givee) = (name giver) ++ " gives you " ++ (name item)
+  | otherwise = (name giver) ++ " gives " ++ (name item) ++ " to " ++ (name givee)
 
-  -- | MsgGive Character Item Character
 
 -- $ "The world around you gets dark. All sounds seem to fade. A moment of complete darkness is followed by a bright flash. As you slowly open your eyes again, a brand new " ++ itName ++ " hovers in the air before you, then floats slowly into your hands."
