@@ -149,6 +149,12 @@ give playerAddr args world =
                Right (w, giver, item, givee)  -> (w, MsgGive giver item givee)
       else (world, MsgInfo "usage: give <item-name> to <player-name>")
 
+say :: Address -> [String] -> WorldAction
+say playerAddr args world = do
+   case findCharacterByAddress playerAddr world of
+     Left err -> (world, MsgInfo err)
+     Right char -> (world, MsgSay char (unwords args))
+
 help :: Address -> [String] -> WorldAction
 help playerAddr args world
   | args == ["commands"] = (world, MsgInfo $ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
@@ -196,6 +202,11 @@ stepWorld sender world action = do
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
     MsgForge char item -> sendMessage sender message
+    MsgSay char text -> do
+      case findRoomOfPlayerByAddress (charAddress char) newWorld of
+        Left err -> debugOut err
+        Right room ->
+          mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
 
   return newWorld
 
@@ -209,6 +220,7 @@ commands =
   , ("forge", forge, "forge <name> $ <description>\n  Create a new item. Requires a scroll of forgery.")
   , ("discard", discard, "discard <item-name>\n  Delete an item. Completely. Forever. Think twice.")
   , ("give", give, "give <item-name> to <player-name>\n  Give an item to another player.")
+  , ("say", say, "say <text>\n  Say something, everybody in your current room can hear it.")
   , ("help", help, "")
   ]
 

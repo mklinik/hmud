@@ -19,6 +19,7 @@ data Message =
   | MsgPut Character Item
   | MsgGive Character Item Character
   | MsgForge Character Item
+  | MsgSay Character String
   deriving (Show, Eq)
 
 data IncomingMessage =
@@ -42,6 +43,9 @@ isMsgGive _ = False
 isMsgForge (MsgForge _ _) = True
 isMsgForge _ = False
 
+isMsgSay (MsgSay _ _) = True
+isMsgSay _ = False
+
 -- turn a message object into nice text, addressed to the receiver
 describeMessage :: Address -> Message -> String
 describeMessage _ (MsgInfo text) = text
@@ -63,6 +67,7 @@ describeMessage receiver (MsgGive giver item givee)
   | receiver == (charAddress giver) = "You give " ++ (doArticleMagic $ name item) ++ " to " ++ (name givee)
   | receiver == (charAddress givee) = (name giver) ++ " gives you " ++ (doArticleMagic $ name item)
   | otherwise = (name giver) ++ " gives " ++ (doArticleMagic $ name item) ++ " to " ++ (name givee)
+describeMessage receiver (MsgSay sayer text) = (name sayer) ++ " says: " ++ text
 
 -- if /name/ starts with a lower letter, add the article 'a' to it
 doArticleMagic :: String -> String

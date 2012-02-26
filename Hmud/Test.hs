@@ -195,6 +195,24 @@ specs = descriptions
       )
     ]
 
+  , describe "say"
+    [ it "can only be heard in the current room"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerEnters (Just "player2") "Bil Bo" "bil.bo@localhost")
+                , (MsgCommand      (Just "player0") (words "goto town"))
+                , (MsgCommand      (Just "player1") (words "say hello"))
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let sayMsgs = List.filter (isMsgSay . snd) outputMsgs
+          assertEqual "we got 2 say messages" 2 $ length sayMsgs
+          assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") sayMsgs
+          assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") sayMsgs
+      )
+    ]
+
   ]
 
 main = hspec specs
