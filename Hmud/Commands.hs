@@ -22,7 +22,7 @@ insertNewPlayer :: Character -> String -> WorldAction
 insertNewPlayer player toName world =
   case insertCharacterToRoom player toName world of
     Left err -> (world, MsgInfo err)
-    Right w  -> (w, MsgInfo $ "Welcome " ++ (name player) ++ ", you are a " ++ (describe player) ++ ". Type \"help\" for more information.")
+    Right w  -> (w, MsgInfo $ "Welcome " ++ (name player) ++ ", you are " ++ (describe player) ++ ". Type \"help\" for more information.")
 
 insertItem :: Item -> String -> WorldAction
 insertItem item toName world =
