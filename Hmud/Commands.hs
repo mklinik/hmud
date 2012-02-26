@@ -247,13 +247,4 @@ run world = do
               Left err -> debugOut err >> return world
               Right newWorld -> return newWorld
       run newWorld
-    MsgPlayerLeaves playerAddr -> case do
-        room <- findRoomOfPlayerByAddress playerAddr world
-        char <- findCharacterInRoomByAddress playerAddr room
-        let newChar = char { charAddress = Nothing }
-        newRoom <- updateCharInRoom newChar room
-        updateRoomInWorld newRoom world
-      of
-        Left err -> debugOut err >> run world
-        Right newWorld -> run newWorld
     MsgExit -> return world

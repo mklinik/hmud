@@ -34,7 +34,6 @@ onMessage msgMVar server message
   | chan == (IRC.cNick ircConfig) = do -- only private messages to the oracle directly
       let tokens = words $ B.unpack msg
       putMVar msgMVar $ MsgCommand (Just $ B.unpack origin) tokens
-  | otherwise = putStrLn $ show message
   where chan = B.unpack $ fromJust $ IRC.mChan message
         origin = fromJust $ IRC.mOrigin message
         msg = IRC.mMsg message
@@ -46,10 +45,15 @@ onJoin msgMVar server message
   where nick = B.unpack $ fromJust $ IRC.mNick message
         user = B.unpack $ fromJust $ IRC.mUser message
 
-onPart :: MVar IncomingMessage -> IRC.EventFunc
-onPart msgMVar server message =
-  putMVar msgMVar $ MsgPlayerLeaves (Just nick)
+onNick :: MVar IncomingMessage -> IRC.EventFunc
+onNick msgMVar server message
+  | nick == (IRC.cNick ircConfig) = return () -- ignore message from myself
+  | otherwise = do
+      putStrLn $ "nick change: " ++ nick ++ " -> " ++ msg
+      putMVar msgMVar $ MsgPlayerEnters (Just msg) msg user
   where nick = B.unpack $ fromJust $ IRC.mNick message
+        user = B.unpack $ fromJust $ IRC.mUser message
+        msg = B.unpack $ IRC.mMsg message
 
 instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
   waitForMessage = do
@@ -68,7 +72,7 @@ main = do
 
   let events = [ (IRC.Privmsg (onMessage msgMVar))
                , (IRC.Join (onJoin msgMVar))
-               , (IRC.Part (onPart msgMVar))
+               , (IRC.Nick (onNick msgMVar))
                ]
   eitherIrc <- IRC.connect (ircConfig { IRC.cEvents = events }) True True
 

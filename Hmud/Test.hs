@@ -183,7 +183,7 @@ specs = descriptions
           let (world2, (inputMsgs, outputMsgs, debugs)) = State.runState (run world) (
                 [ (MsgPlayerEnters (Just "playerA") "Hel Mut" "hel.mut@localhost")
                 , (MsgPlayerEnters (Just "playerB") "Ara Gorn" "ara.gorn@localhost")
-                , (MsgPlayerLeaves (Just "playerB"))
+                -- now, Ara Gorn leaves and playerA tries to impersonate playerB
                 , (MsgPlayerEnters (Just "playerB") "Hel Mut" "hel.mut@localhost")
                 , (MsgCommand      (Just "playerB") (words "goto town"))
                 ], []::[TestStateOutgoing], []::[String])

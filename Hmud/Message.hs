@@ -24,7 +24,6 @@ data Message =
 data IncomingMessage =
     MsgCommand Address [String]
   | MsgPlayerEnters Address String String
-  | MsgPlayerLeaves Address
   | MsgExit
   deriving (Show, Eq)
 
