@@ -16,7 +16,7 @@ test:
 
 clean:
 	find . -name '*.hi' -o -name '*.o' | xargs -r rm
-	rm -f xmppFrontend cliFrontend
+	rm -f xmppFrontend cliFrontend ircFrontend
 
 runXmpp: xmppFrontend
 	./xmppFrontend
