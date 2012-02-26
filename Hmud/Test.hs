@@ -213,6 +213,23 @@ specs = descriptions
       )
     ]
 
+  , describe "tell"
+    [ it "can only be heard by the receipient"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerEnters (Just "player2") "Bil Bo" "bil.bo@localhost")
+                , (MsgCommand      (Just "player0") (words "goto town"))
+                , (MsgCommand      (Just "player1") (words "tell Bil $ hello"))
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let tellMsgs = List.filter (isMsgTell . snd) outputMsgs
+          assertEqual "we got 1 tell messages" 1 $ length tellMsgs
+          assertBool "the say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") tellMsgs
+      )
+    ]
+
   ]
 
 main = hspec specs

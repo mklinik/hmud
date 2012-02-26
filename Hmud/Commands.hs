@@ -155,6 +155,23 @@ say playerAddr args world = do
      Left err -> (world, MsgInfo err)
      Right char -> (world, MsgSay char (unwords args))
 
+tell :: Address -> [String] -> WorldAction
+tell playerAddr args world =
+  let (receiverName_, text_) = span (\x -> x /= "$") args
+  in
+    if (length receiverName_ > 0 && length text_ > 1)
+      then let text = unwords $ tail text_
+               receiverName = unwords receiverName_
+           in
+             case do char <- findCharacterByAddress playerAddr world
+                     room <- findRoomOfPlayerByAddress playerAddr world
+                     receiver <- findCharacterInRoom receiverName room
+                     Right (world, char, receiver, text)
+             of
+               Left err -> (world, MsgInfo err)
+               Right (w, speaker, listener, text)  -> (w, MsgTell speaker listener text)
+      else (world, MsgInfo "usage: tell <player-name> $ <text>")
+
 me :: Address -> [String] -> WorldAction
 me playerAddr args world = do
    case findCharacterByAddress playerAddr world of
@@ -213,6 +230,7 @@ stepWorld sender world action = do
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
+    MsgTell _ listener text -> sendMessage (charAddress listener) message
     MsgMe char text -> do
       case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
@@ -232,6 +250,7 @@ commands =
   , ("discard", discard, "discard <item-name>\n  Delete an item. Completely. Forever. Think twice.")
   , ("give", give, "give <item-name> to <player-name>\n  Give an item to another player.")
   , ("say", say, "say <text>\n  Say something, everybody in your current room can hear it.")
+  , ("tell", tell, "tell <player-name> $ <text>\n  Say something that only one other player can hear.")
   , ("me", me, "me <text>\n  Do something, everybody in your current room can see it.")
   , ("help", help, "")
   ]
