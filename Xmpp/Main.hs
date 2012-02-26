@@ -27,6 +27,7 @@ botServer = "localhost"
 botPassword = "abc"
 botResource = "oracle"
 groupchatJID = "gtf@conference." ++ botServer
+groupchatPassword = Nothing
 botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
 
 main :: IO ()
@@ -50,7 +51,7 @@ main = withSocketsDo $ do
   XMPP.handleVersion "hmud" "0.1" "Linux"
   -- ...and do something.
 
-  XMPP.joinGroupchat "oracle" groupchatJID Nothing
+  XMPP.joinGroupchat "oracle" groupchatJID groupchatPassword
 
   w1 <- XMPP.liftIO $ stepWorld Nothing world (insertItem scroll1 "The Black Unicorn")
 
