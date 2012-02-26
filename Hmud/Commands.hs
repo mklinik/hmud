@@ -155,6 +155,12 @@ say playerAddr args world = do
      Left err -> (world, MsgInfo err)
      Right char -> (world, MsgSay char (unwords args))
 
+me :: Address -> [String] -> WorldAction
+me playerAddr args world = do
+   case findCharacterByAddress playerAddr world of
+     Left err -> (world, MsgInfo err)
+     Right char -> (world, MsgMe char (unwords args))
+
 help :: Address -> [String] -> WorldAction
 help playerAddr args world
   | args == ["commands"] = (world, MsgInfo $ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
@@ -207,6 +213,11 @@ stepWorld sender world action = do
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
+    MsgMe char text -> do
+      case findRoomOfPlayerByAddress (charAddress char) newWorld of
+        Left err -> debugOut err
+        Right room ->
+          mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
 
   return newWorld
 
@@ -221,6 +232,7 @@ commands =
   , ("discard", discard, "discard <item-name>\n  Delete an item. Completely. Forever. Think twice.")
   , ("give", give, "give <item-name> to <player-name>\n  Give an item to another player.")
   , ("say", say, "say <text>\n  Say something, everybody in your current room can hear it.")
+  , ("me", me, "me <text>\n  Do something, everybody in your current room can see it.")
   , ("help", help, "")
   ]
 

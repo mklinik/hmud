@@ -20,6 +20,7 @@ data Message =
   | MsgGive Character Item Character
   | MsgForge Character Item
   | MsgSay Character String
+  | MsgMe Character String
   deriving (Show, Eq)
 
 data IncomingMessage =
@@ -68,6 +69,7 @@ describeMessage receiver (MsgGive giver item givee)
   | receiver == (charAddress givee) = (name giver) ++ " gives you " ++ (doArticleMagic $ name item)
   | otherwise = (name giver) ++ " gives " ++ (doArticleMagic $ name item) ++ " to " ++ (name givee)
 describeMessage receiver (MsgSay sayer text) = (name sayer) ++ " says: " ++ text
+describeMessage receiver (MsgMe sayer text) = (name sayer) ++ " " ++ text
 
 -- if /name/ starts with a lower letter, add the article 'a' to it
 doArticleMagic :: String -> String
