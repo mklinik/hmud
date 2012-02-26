@@ -22,22 +22,25 @@ import Hmud.Hmud
 import Xmpp.Util
 
 -- The bot's JID is "bot@example.com"
-botUsername = "markus.klinik"
-botServer = "localhost"
-botPassword = "abc"
+botUsername = "kliniksmarkus"
+botServer = "jabber.ccc.de"
+botPassword = "XXXXX"
 botResource = "oracle"
-groupchatJID = "gtf@conference.localhost"
+groupchatJID = "apotheke@conference.jabber.ccc.de"
 botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
 
 main :: IO ()
 main = withSocketsDo $ do
   -- Connect to server...
-  c <- XMPP.openStream botServer
+  s <- XMPP.connectStream [("localhost", PortNumber 31337)]
+  c <- XMPP.sendStreamHeader s botServer
   XMPP.getStreamStart c
 
   XMPP.runXMPP c $ do
   -- ...authenticate...
-  XMPP.startAuth botUsername botServer botPassword botResource
+  success <- XMPP.startAuth botUsername botServer botPassword botResource
+  if success /= 0 then error "Authentication not successful."
+  else do
   XMPP.sendPresence (Just ("", [homepageURL, ""])) Nothing
   XMPP.handleVersion "hmud" "0.1" "Linux"
   -- ...and do something.

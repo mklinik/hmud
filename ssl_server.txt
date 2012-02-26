@@ -1,0 +1,5 @@
+To connect to SSL enabled servers, run ncat locally as follows:
+
+    $ ncat -l localhost 31337 -c "ncat --ssl <jabber-server> 443"
+
+Then let hmud connect to localhost, port 31337
