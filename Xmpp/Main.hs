@@ -22,18 +22,23 @@ import Hmud.Hmud
 import Xmpp.Util
 
 -- The bot's JID is "bot@example.com"
-botUsername = "kliniksmarkus"
-botServer = "jabber.ccc.de"
-botPassword = "XXXXX"
+botUsername = "oracle"
+botServer = "localhost"
+botPassword = "abc"
 botResource = "oracle"
-groupchatJID = "apotheke@conference.jabber.ccc.de"
+groupchatJID = "gtf@conference." ++ botServer
 botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
 
 main :: IO ()
 main = withSocketsDo $ do
-  -- Connect to server...
-  s <- XMPP.connectStream [("localhost", PortNumber 31337)]
-  c <- XMPP.sendStreamHeader s botServer
+
+  -- EITHER: Connect to server with SSL: you need ncat running, see ssl_server.txt
+  -- s <- XMPP.connectStream [("localhost", PortNumber 31337)]
+  -- c <- XMPP.sendStreamHeader s botServer
+  -- OR: Connect to server without SSL
+  c <- XMPP.openStream botServer
+  -- DONE connecting
+
   XMPP.getStreamStart c
 
   XMPP.runXMPP c $ do
