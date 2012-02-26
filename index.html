@@ -20,7 +20,7 @@
     h1 .small { font-size: 0.4em; }
     h1 a { text-decoration: none }
     h2 { font-size: 1.5em; color: #605510; }
-    h3 { text-align: center; color: #605510; }
+    h3 { text-align: left; color: #605510; }
     a { color: #605510; }
     .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
     .download { float: right; }
@@ -44,63 +44,157 @@
     <h2>What's it?</h2>
 
     <p><em>The Tower</em> is a text adventure that is supposed to jazz up
-    jabber group chats. You can't do much: walk around, stare at the landscape
-    and at other people, pick up items and give items to other players. There
-    are no quests and there is no fighting. <em>The Tower</em> doesn't want to
-    distract you too much from your daily slavery, just generate some funny
-    chat messages for you occasionally.</p>
+    jabber group chats. It doesn't have many features though. You can walk
+    around, stare at the landscape and at other people, pick up items and give
+    items to other players. There are no quests and there is no combat.
+    <em>The Tower</em> doesn't want to distract you too much from your regular
+    slavery, it just wants to generate some amusing chat messages
+    occasionally.</p>
 
     <p>You play the game by chatting with a special participant in the group
-    chat, the <em>oracle</em>.  The oracle tells you what happens around you,
-    what you see, and what other players do.  You tell the oracle what you want
-    to do by sending chat messages that start with certain words, called
+    chat, called the <em>oracle</em>.  The oracle tells you what happens around
+    you, what you see, and what other players do.  You tell the oracle what you
+    want to do by sending chat messages that start with certain words, called
     <em>commands</em>.  For example, if you are someplace and there is an apple
-    lying about, you say "take apple" to the oracle, and the oracle tells you
-    that, whoa, you are now in possession of a healthy, sweet, juicy apple. How
-    cool is that!</p>
+    lying about, you say "take apple", and the oracle tells you that, whoa, you
+    are now in possession of a healthy, sweet, juicy apple. How cool is
+    that!</p>
     
-    <h2>How to participate?</h2>
+    <h2>How to participate</h2>
     
     <p>Just join a jabber group chat where somebody has already started an
-    oracle. You will see the oracle as participant in the group chat. If it is
-    the first time that you entered the group chat, the oracle will create a
-    new character for you, and greet you with a private message. Open that
-    message and start playing!</p>
+    oracle. Or ask your local nerds to start one for you, if you don't know how
+    to do it yourself. Anyway, join the chat room and you will see the oracle
+    as participant in the group chat.  If it is the first time that you enter
+    the group chat, the oracle will create a new character for you, and greet
+    you with a private message.  Open that message and start playing!</p>
 
     <p>If you already have a character, i.e. you have been in that chat room
     before, then you have to open a private conversation window with the oracle
     yourself.  Do so by double-clicking the name of the oracle in the list of
     participants of the group chat.</p>
 
+    <p>Look at the sceenshot below. To the right, you see the group chat window
+    that has the list of participants. On the left, you see the privat chat
+    window with the oracle. The left window opened when I double-clicked the
+    oracle's entry in the right window. Depending on which jabber client you
+    use, the windows might look a bit different.</p>
+
+    <img src="groupchat_privatechat.png"/>
+
     <p>Please note that you can't put the oracle in your contact list. All
     conversation with the oracle must happen via personal group-chat
     messages.</p>
 
-    <h2>How NOT to participate?</h2>
+    <h2>How NOT to participate</h2>
 
     <p>If you join a group chat because you want to chat with the people there,
-    not with a stupid computer game, and the oracle annoys you to no end, just
-    shut it up by blocking all messages from the oracle. Depending on the
-    jabber client you are using, there should be some way to ignore the oracle.
-    Try right-clicking the oracle in the list of participants. Most jabber
-    clients offer a context menu entry to ignore a particular person.</p>
+    not with a stupid computer game, and the oracle annoys you to no end, you
+    can make it shut up by blocking all messages from the oracle. Depending on
+    the jabber client you are using, there should be some way to ignore the
+    oracle.  Try right-clicking the oracle's entry in the list of participants.
+    Most jabber clients offer a context menu entry to ignore a particular
+    person.</p>
 
+    <img src="block_oracle.png"/>
 
     <p>But keep in mind that this makes the oracle very sad. You don't want to
     make the oracle sad, do you?! DO YOU???</p>
 
-    <h2>Screenshots</h2>
+    <p>Hint: you can unblock the oracle at any time again.</p>
+
+    <h2>Screenshot</h2>
 
     <p>Here is a conversation with the oracle, you see the messages that a
-    player sends to the oracle, and the response.</p>
+    player sends to the oracle, and the responses.</p>
+
+    <img src="screenshot.png"/>
+
+    <p>
+    </p>
 
     <h2>Commands</h2>
 
+    Commands are these special words that let you perform actions in The Tower.
+    Send a chat message to the oracle that starts with one of the command
+    words, and watch how mysterious powers do your bidding and modify the game
+    world!
+
+    <p>Note: commands and names of things can be abbreviated. If you are in a
+    location where another location named "Forest" is adjacent, the commands
+
+    <pre>goto Forest</pre>
+
+    and
+
+    <pre>go For</pre>
+
+    do the same thing.</p>
+
+  <h3>Without further ado, on to the list of commands</h3>
+
+  <pre>help commands</pre>
+
+    List all available commands.
+
+  <pre>lookat</pre>
+
+    Describes your immediate surroundings.
+
+  <pre>lookat &lt;name&gt;</pre>
+
+    Describes items or players.
+
+  <pre>goto &lt;location-name&gt;</pre>
+
+    Go to a different location.
+
+  <pre>inventory</pre>
+
+    List your possessions.
+
+  <pre>take &lt;item-name&gt;</pre>
+
+    Pick up an item.
+
+  <pre>put &lt;item-name&gt;</pre>
+
+    Put down an item.
+
+  <pre>forge &lt;name&gt; $ &lt;description&gt;</pre>
+
+    <p>Create a new item. Note that the dollar sign must be surrounded by
+    spaces.  To use this command, you need to have a <em>scroll of forgery</em>
+    in your inventory. How to get one, you ask? Play the game, chat with the
+    other players and if you are nice to them, somebody might eventually give
+    one to you.</p>
+
+    <p>If you finally get your scroll of forgery, keep in mind that items and
+    their descriptions are what make the game amusing. Be creative, don't be
+    rude. And always remember: With great power comes great responsibility.</p>
+
+    <p>Can you forge a new scroll of forgery? Of course you can! Just forge an
+    item whose name is <em>scroll of forgery</em>, and there you go!</p>
+
+  <pre>discard &lt;item-name&gt;</pre>
+
+    Delete an item. Use this command to get rid of all the crappy stuff you
+    forged when you were still a sorcerer's apprentice. However, think twice
+    before discarding the last scroll of forgery in the game.
+
+  <pre>give &lt;item-name&gt; to &lt;player-name&gt;</pre>
+
+    Give an item to another player.
+
     <h2>Notes</h2>
 
-    <p>For bug reports and feature requests, please visit <a
-    href="https://github.com/mklinik/hmud/issues">the issue tracker for
-    hmud</a>.</p>
+    <p>For bug reports and feature requests, please use <a
+    href="https://github.com/mklinik/hmud/issues">the issue tracker</a>.</p>
+
+    <p>The state of the game currently cannot be saved. Hence if, for any
+    stupid reason, I have to restart the game all your items are lost.  Sorry
+    for that. What's that, you want to develop a patch for persistency?  You're
+    very welcome!</p>
 
     <!--<h2>Build instructions</h2>-->
     
