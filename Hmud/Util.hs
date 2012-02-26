@@ -7,6 +7,7 @@ import Data.Char
 
 gameName = "The Tower"
 homepageURL = "http://mklinik.github.com/hmud"
+hmudVersion = "0.1"
 
 randomEnum :: forall a. (Enum a, Bounded a) => IO a
 randomEnum = do

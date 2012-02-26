@@ -1,12 +1,15 @@
-.PHONY: all test clean cliFrontend xmppFrontend run
+.PHONY: all test clean cliFrontend xmppFrontend ircFrontend run runIrc
 
-all: cliFrontend xmppFrontend test
+all: cliFrontend xmppFrontend ircFrontend test
 
 cliFrontend:
 	ghc --make Main.hs -o $@
 
 xmppFrontend:
 	ghc --make Xmpp/Main.hs -o $@
+
+ircFrontend:
+	ghc --make Irc/Main.hs -o $@
 
 test:
 	runhaskell Hmud/Test.hs
@@ -17,3 +20,6 @@ clean:
 
 run: xmppFrontend
 	./xmppFrontend
+
+runIrc: ircFrontend
+	./ircFrontend
