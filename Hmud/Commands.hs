@@ -152,7 +152,7 @@ give playerAddr args world =
 help :: Address -> [String] -> WorldAction
 help playerAddr args world
   | args == ["commands"] = (world, MsgInfo $ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
-  | otherwise = (world, MsgInfo $ "Welcome to The World. Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
+  | otherwise = (world, MsgInfo $ "Welcome to "++ gameName ++". Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
   )
 
 -- main loop:

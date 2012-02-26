@@ -5,6 +5,7 @@ import qualified Random
 import Hmud.Character
 import Data.Char
 
+gameName = "The Tower"
 homepageURL = "http://mklinik.github.com/hmud"
 
 randomEnum :: forall a. (Enum a, Bounded a) => IO a
