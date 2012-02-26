@@ -25,7 +25,7 @@ ircConfig = IRC.defaultConfig
   , IRC.cNick = "towerOracle"
   , IRC.cUsername = "hmudIrcBot"
   , IRC.cRealname = "hmud irc bot"
-  , IRC.cChannels = ["#hmudGame"] -- Channels to join on connect
+  , IRC.cChannels = ["#hmud"] -- Channels to join on connect
   , IRC.cEvents = [] -- Events to bind
   }
 
