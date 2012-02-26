@@ -34,6 +34,7 @@ onMessage msgMVar server message
   | chan == (IRC.cNick ircConfig) = do -- only private messages to the oracle directly
       let tokens = words $ B.unpack msg
       putMVar msgMVar $ MsgCommand (Just $ B.unpack origin) tokens
+  | otherwise = putStrLn $ show message
   where chan = B.unpack $ fromJust $ IRC.mChan message
         origin = fromJust $ IRC.mOrigin message
         msg = IRC.mMsg message
