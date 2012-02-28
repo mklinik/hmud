@@ -10,6 +10,11 @@ import Data.Map (Map)
 import Control.Monad (mapM_)
 import Data.Maybe (isJust)
 
+-- for logging
+import Data.Time (getCurrentTime)
+import System.Locale (defaultTimeLocale, rfc822DateFormat)
+import Data.Time.Format (formatTime)
+
 import Hmud.Item
 import Hmud.Describable
 import Hmud.Character
@@ -30,6 +35,13 @@ botResource = "oracle"
 groupchatJID = "gtf@conference." ++ botServer
 groupchatPassword = Nothing
 botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
+
+logString :: String -> IO ()
+logString s = do
+  t <- getCurrentTime
+  putStr (formatTime defaultTimeLocale rfc822DateFormat t)
+  putStr " "
+  putStrLn s
 
 main :: IO ()
 main = withSocketsDo $ do
@@ -62,7 +74,9 @@ main = withSocketsDo $ do
 instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
   sendMessage Nothing _ = return ()
-  sendMessage (Just addr) msg = XMPP.sendMessage addr $ describeMessage (Just addr) msg
+  sendMessage (Just addr) msg = do
+    XMPP.liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
+    XMPP.sendMessage addr $  describeMessage (Just addr) msg
   mkRandomCharacter name addr primKey = XMPP.liftIO $ randomCharacter name addr primKey
   debugOut str = XMPP.liftIO $ putStrLn str
 
@@ -75,7 +89,9 @@ waitForMessageXmpp = do
     case sender of
       Nothing -> waitForMessageXmpp
       Just playerAddr | playerAddr == botJID -> waitForMessageXmpp
-      Just playerAddr -> return $ MsgCommand (Just playerAddr) tokens
+      Just playerAddr -> do
+        XMPP.liftIO $ logString $ ">> " ++ playerAddr ++ ": " ++ (unwords tokens)
+        return $ MsgCommand (Just playerAddr) tokens
   else if XMPP.isGroupchatPresence stanza then do
     let sender = XMPP.getAttr "from" stanza
     case sender of
@@ -89,7 +105,9 @@ waitForMessageXmpp = do
               Just jid -> if (jid == botJID)
                 then waitForMessageXmpp -- filter presence msg from myself
                 else do
-                  return $ MsgPlayerEnters playerAddr (jid2player jid) (jid2primKey jid)
+                  let msg = MsgPlayerEnters playerAddr (jid2player jid) (jid2primKey jid)
+                  XMPP.liftIO $ logString $ ">> " ++ show msg
+                  return msg
           otherwise -> waitForMessageXmpp
   else if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza) then do
     let idAttr = maybe "" id (XMPP.getAttr "id" stanza)
