@@ -8,6 +8,7 @@ import Data.List (isPrefixOf, intercalate)
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Control.Monad (mapM_)
+import Data.Maybe (isJust)
 
 import Hmud.Item
 import Hmud.Describable
@@ -90,4 +91,11 @@ waitForMessageXmpp = do
                 else do
                   return $ MsgPlayerEnters playerAddr (jid2player jid) (jid2primKey jid)
           otherwise -> waitForMessageXmpp
+  else if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza) then do
+    let idAttr = maybe "" id (XMPP.getAttr "id" stanza)
+        from = maybe "" id (XMPP.getAttr "from" stanza)
+        to =  maybe "" id (XMPP.getAttr "to" stanza)
+        pong = XMPP.XML "iq" [("from", to), ("to", from), ("id", idAttr), ("type", "result")] []
+    XMPP.sendStanza pong
+    waitForMessageXmpp
   else waitForMessageXmpp
