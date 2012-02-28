@@ -23,17 +23,6 @@ import Hmud.Item
 import Hmud.Commands
 import Xmpp.Util
 
-player0 = Character
-  { charName = "player0"
-  , charRace = Human
-  , charRole = Fool
-  , charGender = Female
-  , charLevel = 1
-  , charInventory = []
-  , charAddress = Just "player0addr"
-  , charId = "player0@localhost"
-  }
-
 emptyWorld = World { worldRooms = [] }
 
 specs :: Specs
@@ -45,49 +34,49 @@ specs = descriptions
         (either (const True) (const False) $ insertCharacterToRoom player0 "what where?" world)
     , it "returns the world where the player is in the desired room on success"
         ((do
-          w <- insertCharacterToRoom player0 "The Black Unicorn" world
-          r <- findRoom "The Black Unicorn" w
+          w <- insertCharacterToRoom player0 "Black Unicorn" world
+          r <- findRoom "Black Unicorn" w
           findCharacterInRoom "player0" r
         ) == Right player0)
     , it "works with abbreviated room name"
         ((do
-          w <- insertCharacterToRoom player0 "The Bl" world
-          r <- findRoom "The Black Unicorn" w
+          w <- insertCharacterToRoom player0 "Bl" world
+          r <- findRoom "Black Unicorn" w
           findCharacterInRoom "player0" r
         ) == Right player0)
     ]
 
   , describe "gotoFromTo"
     [ it "returns Nothing if there is no such *from* room"
-        (either (const True) (const False) $ gotoFromTo (Just "player0addr") "what where?" "The Black Unicorn" world)
+        (either (const True) (const False) $ gotoFromTo (Just "player0addr") "what where?" "Black Unicorn" world)
     , it "returns Nothing if there is no such *to* room"
-        (either (const True) (const False) $ gotoFromTo (Just "player0addr") "The Black Unicorn" "what where?" world)
+        (either (const True) (const False) $ gotoFromTo (Just "player0addr") "Black Unicorn" "what where?" world)
     , it "returns Nothing if there is no such character in the *from* room"
-        (either (const True) (const False) $ gotoFromTo (Just "slayer0") "The Black Unicorn" "town square" world)
+        (either (const True) (const False) $ gotoFromTo (Just "slayer0") "Black Unicorn" "town square" world)
     , it "works when everything is fine"
       (TestCase $ do
-                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  let (w3, _, _, _) = fromRight $ gotoFromTo (Just "player0addr") "The Black Unicorn" "town square" w2
-                  let fromRoom = fromRight $ findRoom "The Black Unicorn" w3
+                  let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
+                  let (w3, _, _, _) = fromRight $ gotoFromTo (Just "player0addr") "Black Unicorn" "town square" w2
+                  let fromRoom = fromRight $ findRoom "Black Unicorn" w3
                   let toRoom   = fromRight $ findRoom "town square" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacterInRoom "player0" fromRoom)
                   assertEqual "player is now in *toRoom*" (Right player0) (findCharacterInRoom "player0" toRoom)
       )
     , it "does not work with abbreviated names"
       (TestCase $ do
-                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black" world
+                  let w2 = fromRight $ insertCharacterToRoom player0 "Black" world
                   assertBool "no such player pl" $ isLeft $ gotoFromTo (Just "pl") "Th" "to" w2
       )
     , it "fails when trying to go to the same room again"
       (TestCase $ do
-                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
-                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo (Just "player0addr") "The Black" "The Black Un" w2
+                  let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
+                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo (Just "player0addr") "Black" "Black Un" w2
       )
     ]
   , describe "findCharacterByAddress"
     [ it "succeeds when everything is fine"
       (TestCase $ do
-                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
+                  let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
                   assertEqual "player found" (Right player0) (findCharacterByAddress (Just "player0addr") w2)
                   assertBool "player not found" $ isLeft (findCharacterByAddress (Just "slayer0") w2)
       )
@@ -98,7 +87,7 @@ specs = descriptions
       )
     , it "fails with partial names"
       (TestCase $ do
-                  let w2 = fromRight $ insertCharacterToRoom player0 "The Black Unicorn" world
+                  let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
                   assertBool "player not found" $ isLeft (findCharacterByAddress (Just "pla") w2)
       )
     ]
@@ -113,14 +102,14 @@ specs = descriptions
 
   -- system tests, maps input messages to output messages
   , describe "system tests"
-    [ it "a player joins, and is put to The Black Unicorn"
+    [ it "a player joins, and is put to Black Unicorn"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
                 [(MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           assertEqual "player0 is in the Unicorn"
-            "The Black Unicorn" (roomName (fromRight $ findRoomOfPlayerByAddress (Just "player0") newWorld))
+            "Black Unicorn" (roomName (fromRight $ findRoomOfPlayerByAddress (Just "player0") newWorld))
       )
     , it "a player joins, then goes to town square"
       ( TestCase $ do
@@ -133,13 +122,13 @@ specs = descriptions
           assertEqual "player0 is in town square" "town square" (roomName room)
           let player = fromRight $ findCharacterInRoomByAddress (Just "player0") room
           let (_, MsgGoto fromRoom char toRoom) = head $ List.filter (isMsgGoto . snd) outputMsgs
-          assertEqual "fromRoom is the Unicorn" "The Black Unicorn" (roomName fromRoom)
+          assertEqual "fromRoom is the Unicorn" "Black Unicorn" (roomName fromRoom)
           assertEqual "player is Hel Mut" "Hel Mut" (charName char)
           assertEqual "toRoom is town square" "town square" (roomName toRoom)
       )
     , it "a player joins, then picks up the scroll of forgery, then forges an item"
       ( TestCase $ do
-          let world2 = fromRight $ insertItemToRoom scroll1 "The Black Unicorn" world
+          let world2 = fromRight $ insertItemToRoom scroll1 "Black Unicorn" world
           let (world3, (inputMsgs, outputMsgs, _)) = State.runState (run world2) (
                 [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
                 , (MsgCommand      (Just "player0") (words "take scroll"))
@@ -158,7 +147,7 @@ specs = descriptions
       )
     , it "three players join, one picks up the scroll and drops the scroll again"
       ( TestCase $ do
-          let world2 = fromRight $ insertItemToRoom scroll1 "The Black Unicorn" world
+          let world2 = fromRight $ insertItemToRoom scroll1 "Black Unicorn" world
           let (world3, (inputMsgs, outputMsgs, _)) = State.runState (run world2) (
                 [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
                 , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
@@ -188,7 +177,7 @@ specs = descriptions
                 , (MsgCommand      (Just "playerB") (words "goto town"))
                 ], []::[TestStateOutgoing], []::[String])
           mapM_ (hPutStrLn stderr) debugs
-          let unicorn = fromRight $ findRoom "The Black Unicorn" world2
+          let unicorn = fromRight $ findRoom "Black Unicorn" world2
           let townSqr = fromRight $ findRoom "town square" world2
           assertBool "Ara Gorn is still in The Unicorn" $ isRight $ findCharacterInRoom "Ara Gorn" unicorn
           assertBool "Hel Mut went to town square" $ isRight $ findCharacterInRoom "Hel Mut" townSqr

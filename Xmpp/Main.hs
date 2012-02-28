@@ -21,7 +21,7 @@ import Hmud.Character
 import Hmud.Room
 import Hmud.World
 import Hmud.Util
-import Hmud.TestData
+import Hmud.RealData
 import Hmud.Commands
 import Hmud.Message
 import Hmud.Hmud
@@ -66,9 +66,7 @@ main = withSocketsDo $ do
 
   XMPP.joinGroupchat "oracle" groupchatJID groupchatPassword
 
-  w1 <- XMPP.liftIO $ stepWorld Nothing world (insertItem scroll1 "The Black Unicorn")
-
-  run w1
+  run world
   return ()
 
 instance MonadHmud XMPP where

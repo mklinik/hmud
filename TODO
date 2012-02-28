@@ -1,29 +1,9 @@
-- find a way to connect to server via SSL, possibly by patching XMPP.openStream
-  to take a handle, which you connect to ncat before
-
-- map jabber IDs to player names: messages may come from
- - the groupchat: gtf@conference.localhost/markus.klinik
- - direct chat: markus.klinik@localhost/Gajim
- - in both cases, the sender ID must map to "Markus Klinik"
-- have a mapping between jabber IDs and player names
-- different jabber IDs can map to the same player name
-- the sender's resource in a group chat message is the nickname!
-- get the jabber ID to a groupchat nick!
-- BUT! send the reply to the sender, no matter how you got the request
-- So here is how it should work:
-   - register for groupchat presence stanzas XMPP.MUC.isGroupchatPresence
-   - parse stanza with doGroupchatPresence to get the jabber ID
-   - handle NickChange to keep track of nick changes
-   - anonymous participants can't play
-
-- How can I have one thread handle different kinds of stanzas?
- - wait for any stanza with (const True)
- - dispatch yourself
-
-- send personalized messages to all players in a room when something
-  interesting happens
-
-- write user documentation with screenshots
- - how to participate
- - how to NOT participate (block oracle)
- - commands with syntax and description
+- help commands includes hint about abbreviation
+- black background for documentation is hard to read. Change to light gray or
+  something
+- rename section "how NOT to participate" -> "how to decline participation"
+- don't omit people and item lists when there are none. Write: "no items lie
+  about" and "no people are present"
+- rename command discard -> delete
+- tell command should give feedback to the speaker
+- hide characters whose players have left

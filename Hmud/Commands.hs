@@ -279,7 +279,7 @@ run world = do
         case findCharacterById primKey world of
           Left _ -> do
             player <- mkRandomCharacter playerName playerAddr primKey
-            newWorld <- stepWorld playerAddr world (insertNewPlayer player "The Black Unicorn")
+            newWorld <- stepWorld playerAddr world (insertNewPlayer player "Black Unicorn")
             return newWorld
           Right char -> case do
               room <- findRoomOfPlayerById primKey world

@@ -35,11 +35,11 @@ instance Describable Room where
 instance Show Room where
   show = name
 
-mkRoom name description adjacents =
+mkRoom name description adjacents items =
   Room { roomName = name
        , roomDescription = description
        , roomCharacters = []
-       , roomItems = []
+       , roomItems = items
        , roomAdjacents = adjacents
        }
 
