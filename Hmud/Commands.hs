@@ -178,9 +178,11 @@ me playerAddr args world = do
      Left err -> (world, MsgInfo err)
      Right char -> (world, MsgMe char (unwords args))
 
+abbreviationInfo = "\nCommands and names can be abbreviated when unambiguous.\n\"i\" instead of \"inventory\", \"go For\" instead of \"goto Forest\", \"gi scr to Mon\" instead of \"give scroll of forgery to Monika\"\n"
+
 help :: Address -> [String] -> WorldAction
 help playerAddr args world
-  | args == ["commands"] = (world, MsgInfo $ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
+  | args == ["commands"] = (world, MsgInfo $ abbreviationInfo ++ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
   | otherwise = (world, MsgInfo $ "Welcome to "++ gameName ++". Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
   )
 
