@@ -249,7 +249,7 @@ commands =
   , ("take", pickup, "take <item-name>\n  Pick up an item.")
   , ("put", put, "put <item-name>\n  Put down an item.")
   , ("forge", forge, "forge <name> $ <description>\n  Create a new item. Requires a scroll of forgery.")
-  , ("discard", discard, "discard <item-name>\n  Delete an item. Completely. Forever. Think twice.")
+  , ("delete", discard, "delete <item-name>\n  Delete an item. Completely. Forever. Think twice.")
   , ("give", give, "give <item-name> to <player-name>\n  Give an item to another player.")
   , ("say", say, "say <text>\n  Say something, everybody in your current room can hear it.")
   , ("tell", tell, "tell <player-name> $ <text>\n  Say something that only one other player can hear.")
