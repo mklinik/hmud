@@ -22,15 +22,15 @@ instance Describable Room where
       people =
         if (not $ null $ roomCharacters room)
           then "\n\nThese people are present:\n" ++ (intercalate ", " $ map name $ roomCharacters room)
-          else ""
+          else "\n\nNo people are present."
       items =
         if (not $ null $ roomItems room)
           then "\n\nThese things lie about:\n" ++ (intercalate ", " $ map name $ roomItems room)
-          else ""
+          else "\n\nNo items lie about."
       directions =
         if (not $ null $ roomAdjacents room)
           then "\n\nFrom here you can go to:\n" ++ (intercalate ", " $ roomAdjacents room)
-          else ""
+          else "\n\nFrom here, you cannot go anywhere. YOU ARE TRAPPED! Holy cow, how did that happen?"
 
 instance Show Room where
   show = name

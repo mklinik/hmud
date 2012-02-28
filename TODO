@@ -1,9 +1,3 @@
-- black background for documentation is hard to read. Change to light gray or
-  something
-- rename section "how NOT to participate" -> "how to decline participation"
-- don't omit people and item lists when there are none. Write: "no items lie
-  about" and "no people are present"
-- rename command discard -> delete
 - tell command should give feedback to the speaker
 - hide characters whose players have left
 - spaces around dollar are unintuitive: forge, tell
