@@ -1,7 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
 import Control.Monad
 
 import System.IO (hFlush, stdout)
+import System.Console.Haskeline
 import Data.List (isPrefixOf, intercalate)
+import Control.Monad.Trans (liftIO)
 
 import Hmud.Hmud
 import Hmud.Message
@@ -14,20 +17,18 @@ import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
 
-instance MonadHmud IO where
-  waitForMessage = do
-    putStr ">>> "
-    hFlush stdout
-    tokens <- fmap words getLine
-    case tokens of
-      [] -> return MsgExit
-      otherwise -> return $ MsgCommand (Just "player") tokens
-  sendMessage addr msg = putStrLn $ describeMessage addr msg
+instance MonadHmud (InputT IO) where
+  waitForMessage = parseMsg `fmap` getInputLine ">>> "
+    where
+      parseMsg = maybe MsgExit (MsgCommand (Just "player") . words)
+  sendMessage addr msg = liftIO . putStrLn $ describeMessage addr msg
   mkRandomCharacter = randomCharacter
-  debugOut = putStrLn
+  debugOut = liftIO . putStrLn
 
-main = do
+main :: IO ()
+main = runInputT defaultSettings $ do
   player <- randomCharacter "Markus" (Just "player") "a"
+
   npc1 <- randomCharacter "Martin" Nothing ""
   npc2 <- randomCharacter "Karin" Nothing ""
   npc3 <- randomCharacter "Kathy" Nothing ""
@@ -42,4 +43,4 @@ main = do
 
   run w8
 
-  putStrLn "bye."
+  liftIO $ putStrLn "bye."
