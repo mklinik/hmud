@@ -73,9 +73,11 @@ describeMessage receiver (MsgGive giver item givee)
   | receiver == (charAddress givee) = (name giver) ++ " gives you " ++ (doArticleMagic $ name item)
   | otherwise = (name giver) ++ " gives " ++ (doArticleMagic $ name item) ++ " to " ++ (name givee)
 describeMessage receiver (MsgSay sayer text) = (name sayer) ++ " says: " ++ text
-describeMessage receiver (MsgTell speaker _ text)
-  | receiver == (charAddress speaker) = "Continue speaking to yourself and I'll call the doctor."
-  | otherwise = (name speaker) ++ " tells you: " ++ text
+describeMessage receiver (MsgTell speaker listener text)
+  | (charAddress listener) == (charAddress speaker) = "Continue speaking to yourself and I'll call the doctor."
+  | receiver == (charAddress speaker) = "You tell " ++ (name listener) ++ ": " ++ text
+  | receiver == (charAddress listener) = (name speaker) ++ " tells you: " ++ text
+  | otherwise = (name speaker) ++ " tells " ++ (name listener) ++ ": " ++ text -- should never happen
 describeMessage receiver (MsgMe sayer text) = (name sayer) ++ " " ++ text
 
 -- if /name/ starts with a lower letter, add the article 'a' to it

@@ -232,7 +232,12 @@ stepWorld sender world action = do
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgTell _ listener text -> sendMessage (charAddress listener) message
+    MsgTell speaker listener text -> if speaker == listener
+      then
+        sendMessage (charAddress listener) message
+      else do
+        sendMessage (charAddress listener) message
+        sendMessage (charAddress speaker) message
     MsgMe char text -> do
       case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
