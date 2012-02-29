@@ -9,6 +9,7 @@ import qualified Data.Map as Map
 import Data.Map (Map)
 import Control.Monad (mapM_)
 import Data.Maybe (isJust)
+import Control.Monad.Trans (liftIO)
 
 -- for logging
 import Data.Time (getCurrentTime)
@@ -75,10 +76,10 @@ instance MonadHmud XMPP where
   waitForMessage = waitForMessageXmpp
   sendMessage Nothing _ = return ()
   sendMessage (Just addr) msg = do
-    XMPP.liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
+    liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
     XMPP.sendMessage addr $  describeMessage (Just addr) msg
-  mkRandomCharacter name addr primKey = XMPP.liftIO $ randomCharacter name addr primKey
-  debugOut str = XMPP.liftIO $ putStrLn str
+  mkRandomCharacter name addr primKey = liftIO $ randomCharacter name addr primKey
+  debugOut str = liftIO $ putStrLn str
 
 waitForMessageXmpp :: XMPP IncomingMessage
 waitForMessageXmpp = do
@@ -91,7 +92,7 @@ waitForMessageXmpp = do
         Nothing -> waitForMessageXmpp
         Just playerAddr | playerAddr == botJID -> waitForMessageXmpp
         Just playerAddr -> do
-          XMPP.liftIO $ logString $ ">> " ++ playerAddr ++ ": " ++ (unwords tokens)
+          liftIO $ logString $ ">> " ++ playerAddr ++ ": " ++ (unwords tokens)
           return $ MsgCommand (Just playerAddr) tokens
     else if XMPP.isGroupchatPresence stanza
       then do
@@ -108,7 +109,7 @@ waitForMessageXmpp = do
                     then waitForMessageXmpp -- filter presence msg from myself
                     else do
                       let msg = MsgPlayerEnters playerAddr (jid2player jid) (jid2primKey jid)
-                      XMPP.liftIO $ logString $ ">> " ++ show msg
+                      liftIO $ logString $ ">> " ++ show msg
                       return msg
               otherwise -> waitForMessageXmpp
       else if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza)
