@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Hmud.Util where
 
+import           Control.Monad.Trans
 import qualified Random
 import Hmud.Character
 import Data.Char
@@ -16,8 +17,8 @@ randomEnum = do
   randomInt <- Random.randomRIO (minBoundInt, maxBoundInt)
   return $ toEnum randomInt
 
-randomCharacter :: String -> Address -> String -> IO Character
-randomCharacter name addr primKey = do
+randomCharacter :: (MonadIO m) => String -> Address -> String -> m Character
+randomCharacter name addr primKey = liftIO $ do
   race <- randomEnum
   role <- randomEnum
   gender <- randomEnum

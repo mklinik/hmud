@@ -65,7 +65,7 @@ instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
   sendMessage (Just addr) msg = do
     (server, _) <- State.get
     liftIO $ IRC.sendMsg server (B.pack addr) (B.pack $ describeMessage (Just addr) msg)
-  mkRandomCharacter name addr primKey = liftIO $ randomCharacter name addr primKey
+  mkRandomCharacter = randomCharacter
   debugOut m = liftIO $ putStrLn m
 
 main = do

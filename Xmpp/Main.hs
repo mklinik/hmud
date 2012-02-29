@@ -78,7 +78,7 @@ instance MonadHmud XMPP where
   sendMessage (Just addr) msg = do
     liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
     XMPP.sendMessage addr $  describeMessage (Just addr) msg
-  mkRandomCharacter name addr primKey = liftIO $ randomCharacter name addr primKey
+  mkRandomCharacter = randomCharacter
   debugOut str = liftIO $ putStrLn str
 
 waitForMessageXmpp :: XMPP IncomingMessage
