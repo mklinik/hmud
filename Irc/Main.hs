@@ -7,7 +7,7 @@ import Data.Maybe (fromJust, isJust)
 import Control.Concurrent.MVar
 import Control.Concurrent (forkIO)
 import qualified Control.Monad.State as State
-import Control.Monad.State (liftIO, StateT, runStateT)
+import Control.Monad.State (liftIO, StateT, evalStateT)
 
 import Hmud.Item
 import Hmud.Describable
@@ -65,8 +65,8 @@ instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
   sendMessage (Just addr) msg = do
     (server, _) <- State.get
     liftIO $ IRC.sendMsg server (B.pack addr) (B.pack $ describeMessage (Just addr) msg)
-  mkRandomCharacter name addr primKey = liftIO $ randomCharacter name addr primKey
-  debugOut m = liftIO $ putStrLn m
+  mkRandomCharacter = randomCharacter
+  debugOut = liftIO . putStrLn
 
 main = do
   msgMVar <- newEmptyMVar :: IO (MVar IncomingMessage)
@@ -80,6 +80,6 @@ main = do
   case eitherIrc of
     Left _ -> return () -- connect failed
     Right mirc -> do
-      w1 <- stepWorld Nothing world (insertItem scroll1 "The Black Unicorn")
-      runStateT (run w1) (mirc, msgMVar)
+      flip evalStateT (mirc, msgMVar) $ do
+        stepWorld Nothing world (insertItem scroll1 "The Black Unicorn") >>= run
       return ()

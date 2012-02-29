@@ -1,25 +1,14 @@
-.PHONY: all test clean cliFrontend xmppFrontend ircFrontend runXmpp runIrc
-
-all: cliFrontend xmppFrontend ircFrontend test
-
-cliFrontend:
-	ghc --make Main.hs -o $@
-
-xmppFrontend:
-	ghc --make Xmpp/Main.hs -o $@
-
-ircFrontend:
-	ghc --make Irc/Main.hs -o $@
-
 test:
 	runhaskell Hmud/Test.hs
 
+runCli:
+	cabal build && ./dist/build/cliFrontend/cliFrontend
+
+runIrc:
+	cabal build && ./dist/build/ircFrontend/ircFrontend
+
+runXmpp:
+	cabal build && ./dist/build/xmppFrontend/xmppFrontend
+
 clean:
-	find . -name '*.hi' -o -name '*.o' | xargs -r rm
-	rm -f xmppFrontend cliFrontend ircFrontend
-
-runXmpp: xmppFrontend
-	./xmppFrontend
-
-runIrc: ircFrontend
-	./ircFrontend
+	rm -r dist
