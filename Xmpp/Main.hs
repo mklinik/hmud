@@ -1,15 +1,15 @@
 module Main where
 
-import Network
+import           Network
 import qualified Network.XMPP as XMPP
-import Network.XMPP (XMPP)
+import           Network.XMPP (XMPP)
 import qualified Network.XMPP.MUC as XMPP
-import Data.List (isPrefixOf, intercalate)
+import           Data.List (isPrefixOf, intercalate)
 import qualified Data.Map as Map
-import Data.Map (Map)
-import Control.Monad (mapM_)
-import Data.Maybe (isJust)
-import Control.Monad.Trans (liftIO)
+import           Data.Map (Map)
+import           Control.Monad (mapM_)
+import           Data.Maybe (isJust)
+import           Control.Monad.Trans (liftIO)
 
 -- for logging
 import Data.Time (getCurrentTime)
