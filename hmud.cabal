@@ -1,4 +1,4 @@
-name:             hello
+name:             hmud
 version:          0.0.0
 build-type:       Simple
 cabal-version:    >= 1.6

@@ -1,3 +1,8 @@
+default: build test
+
+build:
+	cabal build
+
 test:
 	runhaskell Hmud/Test.hs
 
