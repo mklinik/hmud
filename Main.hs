@@ -1,7 +1,10 @@
 import Control.Monad
 
+import System.IO (hFlush, stdout)
 import Data.List (isPrefixOf, intercalate)
 
+import Hmud.Hmud
+import Hmud.Message
 import Hmud.Item
 import Hmud.Describable
 import Hmud.Character
@@ -10,6 +13,18 @@ import Hmud.World
 import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
+
+instance MonadHmud IO where
+  waitForMessage = do
+    putStr ">>> "
+    hFlush stdout
+    tokens <- fmap words getLine
+    case tokens of
+      [] -> return MsgExit
+      otherwise -> return $ MsgCommand (Just "player") tokens
+  sendMessage addr msg = putStrLn $ describeMessage addr msg
+  mkRandomCharacter = randomCharacter
+  debugOut = putStrLn
 
 main = do
   player <- randomCharacter "Markus" (Just "player") "a"

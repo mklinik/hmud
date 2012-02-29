@@ -7,7 +7,7 @@ import Data.Maybe (fromJust, isJust)
 import Control.Concurrent.MVar
 import Control.Concurrent (forkIO)
 import qualified Control.Monad.State as State
-import Control.Monad.State (liftIO, StateT, runStateT)
+import Control.Monad.State (liftIO, StateT, evalStateT)
 
 import Hmud.Item
 import Hmud.Describable
@@ -80,6 +80,6 @@ main = do
   case eitherIrc of
     Left _ -> return () -- connect failed
     Right mirc -> do
-      w1 <- stepWorld Nothing world (insertItem scroll1 "The Black Unicorn")
-      runStateT (run w1) (mirc, msgMVar)
+      flip evalStateT (mirc, msgMVar) $ do
+        stepWorld Nothing world (insertItem scroll1 "The Black Unicorn") >>= run
       return ()

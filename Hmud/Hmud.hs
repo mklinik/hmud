@@ -3,7 +3,6 @@ module Hmud.Hmud where
 
 import qualified Control.Monad.State as State
 import Control.Monad.State (State)
-import System.IO (hFlush, stdout)
 
 import Hmud.Message
 import Hmud.Character
@@ -41,15 +40,3 @@ instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing], [String])) wh
   debugOut msg = do
     (ins, outs, debugs) <- State.get
     State.put (ins, outs, debugs ++ [msg])
-
-instance MonadHmud IO where
-  waitForMessage = do
-    putStr ">>> "
-    hFlush stdout
-    tokens <- fmap words getLine
-    case tokens of
-      [] -> return MsgExit
-      otherwise -> return $ MsgCommand (Just "player") tokens
-  sendMessage addr msg = putStrLn $ describeMessage addr msg
-  mkRandomCharacter = randomCharacter
-  debugOut = putStrLn
