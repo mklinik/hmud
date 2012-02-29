@@ -15,7 +15,7 @@ import Hmud.Character
 import Hmud.Room
 import Hmud.World
 import Hmud.Util
-import Hmud.TestData
+import Hmud.RealData
 import Hmud.Commands
 import Hmud.Message
 import Hmud.Hmud
@@ -80,6 +80,5 @@ main = do
   case eitherIrc of
     Left _ -> return () -- connect failed
     Right mirc -> do
-      flip evalStateT (mirc, msgMVar) $ do
-        stepWorld Nothing world (insertItem scroll1 "The Black Unicorn") >>= run
+      evalStateT (run world) (mirc, msgMVar)
       return ()
