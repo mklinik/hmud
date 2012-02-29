@@ -1,0 +1,41 @@
+name:             hello
+version:          0.0.0
+build-type:       Simple
+cabal-version:    >= 1.6
+
+flag xmpp-frontend
+
+flag irc-frontend
+
+executable cliFrontend
+  ghc-options:
+      -Wall
+  build-depends:
+      base
+    , mtl
+    , haskell98
+  main-is:
+      Main.hs
+
+executable xmppFrontend
+  main-is:
+      Xmpp/Main.hs
+  if flag(xmpp-frontend)
+    build-depends:
+        XMPP
+      , time
+      , old-locale
+      , containers
+      , network
+  else
+    buildable: False
+
+executable ircFrontend
+  main-is:
+      Irc/Main.hs
+  if flag(irc-frontend)
+    build-depends:
+        bytestring
+      , simpleirc
+  else
+    buildable: False
