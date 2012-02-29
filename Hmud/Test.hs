@@ -203,7 +203,7 @@ specs = descriptions
     ]
 
   , describe "tell"
-    [ it "can only be heard by the receipient"
+    [ it "can only be heard by the receipient and the speaker"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
                 [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
@@ -214,8 +214,9 @@ specs = descriptions
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           let tellMsgs = List.filter (isMsgTell . snd) outputMsgs
-          assertEqual "we got 1 tell messages" 1 $ length tellMsgs
-          assertBool "the say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") tellMsgs
+          assertEqual "we got 2 tell messages" 2 $ length tellMsgs
+          assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") tellMsgs
+          assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") tellMsgs
       )
     ]
 
