@@ -20,26 +20,26 @@ import Hmud.Commands
 instance MonadHmud (InputT IO) where
   waitForMessage = parseMsg `fmap` getInputLine ">>> "
     where
-      parseMsg = maybe MsgExit (MsgCommand (Just "player") . words)
+      parseMsg = maybe MsgExit (MsgCommand "player" . words)
   sendMessage addr msg = liftIO . putStrLn $ describeMessage addr msg
   mkRandomCharacter = randomCharacter
   debugOut = liftIO . putStrLn
 
 main :: IO ()
 main = runInputT defaultSettings $ do
-  player <- randomCharacter "Markus" (Just "player") "a"
+  player <- randomCharacter "Markus" "player" "a"
 
-  npc1 <- randomCharacter "Martin" Nothing ""
-  npc2 <- randomCharacter "Karin" Nothing ""
-  npc3 <- randomCharacter "Kathy" Nothing ""
+  npc1 <- randomCharacter "Martin" "martin" ""
+  npc2 <- randomCharacter "Karin" "karin" ""
+  npc3 <- randomCharacter "Kathy" "kathy" ""
 
-  w2 <- stepWorld Nothing world (insertNewPlayer player "Black Unicorn")
-  w3 <- stepWorld Nothing w2 (insertNewPlayer npc1 "Black Unicorn")
-  w4 <- stepWorld Nothing w3 (insertNewPlayer npc2 "Black Unicorn")
-  w5 <- stepWorld Nothing w4 (insertNewPlayer npc3 "town square")
-  w6 <- stepWorld Nothing w5 (insertItem scroll0 "ivory tower")
-  w7 <- stepWorld Nothing w6 (insertItem beer "Black Unicorn")
-  w8 <- stepWorld Nothing w7 (insertItem scroll1 "Black Unicorn")
+  w2 <- stepWorld "" world (insertNewPlayer player "Black Unicorn")
+  w3 <- stepWorld "" w2 (insertNewPlayer npc1 "Black Unicorn")
+  w4 <- stepWorld "" w3 (insertNewPlayer npc2 "Black Unicorn")
+  w5 <- stepWorld "" w4 (insertNewPlayer npc3 "town square")
+  w6 <- stepWorld "" w5 (insertItem scroll0 "ivory tower")
+  w7 <- stepWorld "" w6 (insertItem beer "Black Unicorn")
+  w8 <- stepWorld "" w7 (insertItem scroll1 "Black Unicorn")
 
   run w8
 

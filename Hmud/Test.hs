@@ -48,15 +48,15 @@ specs = descriptions
 
   , describe "gotoFromTo"
     [ it "returns Nothing if there is no such *from* room"
-        (either (const True) (const False) $ gotoFromTo (Just "player0addr") "what where?" "Black Unicorn" world)
+        (either (const True) (const False) $ gotoFromTo "player0addr" "what where?" "Black Unicorn" world)
     , it "returns Nothing if there is no such *to* room"
-        (either (const True) (const False) $ gotoFromTo (Just "player0addr") "Black Unicorn" "what where?" world)
+        (either (const True) (const False) $ gotoFromTo "player0addr" "Black Unicorn" "what where?" world)
     , it "returns Nothing if there is no such character in the *from* room"
-        (either (const True) (const False) $ gotoFromTo (Just "slayer0") "Black Unicorn" "town square" world)
+        (either (const True) (const False) $ gotoFromTo "slayer0" "Black Unicorn" "town square" world)
     , it "works when everything is fine"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
-                  let (w3, _, _, _) = fromRight $ gotoFromTo (Just "player0addr") "Black Unicorn" "town square" w2
+                  let (w3, _, _, _) = fromRight $ gotoFromTo "player0addr" "Black Unicorn" "town square" w2
                   let fromRoom = fromRight $ findRoom "Black Unicorn" w3
                   let toRoom   = fromRight $ findRoom "town square" w3
                   assertBool "player is no longer in *fromRoom*" $ isLeft (findCharacterInRoom "player0" fromRoom)
@@ -65,30 +65,30 @@ specs = descriptions
     , it "does not work with abbreviated names"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "Black" world
-                  assertBool "no such player pl" $ isLeft $ gotoFromTo (Just "pl") "Th" "to" w2
+                  assertBool "no such player pl" $ isLeft $ gotoFromTo "pl" "Th" "to" w2
       )
     , it "fails when trying to go to the same room again"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
-                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo (Just "player0addr") "Black" "Black Un" w2
+                  assertBool "going to the same room fails" $ isLeft $ gotoFromTo "player0addr" "Black" "Black Un" w2
       )
     ]
   , describe "findCharacterByAddress"
     [ it "succeeds when everything is fine"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
-                  assertEqual "player found" (Right player0) (findCharacterByAddress (Just "player0addr") w2)
-                  assertBool "player not found" $ isLeft (findCharacterByAddress (Just "slayer0") w2)
+                  assertEqual "player found" (Right player0) (findCharacterByAddress "player0addr" w2)
+                  assertBool "player not found" $ isLeft (findCharacterByAddress "slayer0" w2)
       )
     , it "fails in the empty world"
       (TestCase $ do
-                  assertBool "player not found" $ isLeft (findCharacterByAddress (Just "player0addr") emptyWorld)
-                  assertBool "player not found" $ isLeft (findCharacterByAddress (Just "slayer0") emptyWorld)
+                  assertBool "player not found" $ isLeft (findCharacterByAddress "player0addr" emptyWorld)
+                  assertBool "player not found" $ isLeft (findCharacterByAddress "slayer0" emptyWorld)
       )
     , it "fails with partial names"
       (TestCase $ do
                   let w2 = fromRight $ insertCharacterToRoom player0 "Black Unicorn" world
-                  assertBool "player not found" $ isLeft (findCharacterByAddress (Just "pla") w2)
+                  assertBool "player not found" $ isLeft (findCharacterByAddress "pla" w2)
       )
     ]
 
@@ -105,22 +105,22 @@ specs = descriptions
     [ it "a player joins, and is put to Black Unicorn"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
-                [(MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
+                [(MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           assertEqual "player0 is in the Unicorn"
-            "Black Unicorn" (roomName (fromRight $ findRoomOfPlayerByAddress (Just "player0") newWorld))
+            "Black Unicorn" (roomName (fromRight $ findRoomOfPlayerByAddress "player0" newWorld))
       )
     , it "a player joins, then goes to town square"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
-                , (MsgCommand      (Just "player0") (words "goto town square"))
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgCommand      "player0" (words "goto town square"))
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
-          let room = fromRight $ findRoomOfPlayerByAddress (Just "player0") newWorld
+          let room = fromRight $ findRoomOfPlayerByAddress "player0" newWorld
           assertEqual "player0 is in town square" "town square" (roomName room)
-          let player = fromRight $ findCharacterInRoomByAddress (Just "player0") room
+          let player = fromRight $ findCharacterInRoomByAddress "player0" room
           let (_, MsgGoto fromRoom char toRoom) = head $ List.filter (isMsgGoto . snd) outputMsgs
           assertEqual "fromRoom is the Unicorn" "Black Unicorn" (roomName fromRoom)
           assertEqual "player is Hel Mut" "Hel Mut" (charName char)
@@ -130,15 +130,15 @@ specs = descriptions
       ( TestCase $ do
           let world2 = fromRight $ insertItemToRoom scroll1 "Black Unicorn" world
           let (world3, (inputMsgs, outputMsgs, _)) = State.runState (run world2) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
-                , (MsgCommand      (Just "player0") (words "take scroll"))
-                , (MsgCommand      (Just "player0") (words "forge mug of beer $ hmmmmm, beer"))
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgCommand      "player0" (words "take scroll"))
+                , (MsgCommand      "player0" (words "forge mug of beer $ hmmmmm, beer"))
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           assertEqual "we got exactly one take message" 1 (length $ List.filter (isMsgTake . snd) outputMsgs)
-          let room = fromRight $ findRoomOfPlayerByAddress (Just "player0") world3
+          let room = fromRight $ findRoomOfPlayerByAddress "player0" world3
           assertBool "scroll is not in the room" $ isLeft $ findItemInRoom "scroll of forgery" room
-          let char = fromRight $ findCharacterByAddress (Just "player0") world3
+          let char = fromRight $ findCharacterByAddress "player0" world3
           assertBool "scroll is in the players inventory" $ isRight $ characterFindItem "scroll of forgery" char
           assertBool "beer is in the players inventory" $ isRight $ characterFindItem "mug of beer" char
           let (_, MsgForge c it) = head $ List.filter (isMsgForge . snd) outputMsgs
@@ -149,32 +149,32 @@ specs = descriptions
       ( TestCase $ do
           let world2 = fromRight $ insertItemToRoom scroll1 "Black Unicorn" world
           let (world3, (inputMsgs, outputMsgs, _)) = State.runState (run world2) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
-                , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
-                , (MsgPlayerEnters (Just "player2") "Bil Bo" "bil.bo@localhost")
-                , (MsgCommand      (Just "player0") (words "take scroll"))
-                , (MsgCommand      (Just "player0") (words "put scroll"))
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "player1" "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerEnters "player2" "Bil Bo" "bil.bo@localhost")
+                , (MsgCommand      "player0" (words "take scroll"))
+                , (MsgCommand      "player0" (words "put scroll"))
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           let takeMsgs = List.filter (isMsgTake . snd) outputMsgs
           let putMsgs = List.filter (isMsgPut . snd) outputMsgs
           assertEqual "we got three take messages" 3 (length takeMsgs)
           assertEqual "we got three put messages" 3 (length putMsgs)
-          assertBool "one take message is to player0" $ isJust $ List.find (\(addr, _) -> addr == Just "player0") takeMsgs
-          assertBool "one take message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") takeMsgs
-          assertBool "one take message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") takeMsgs
-          assertBool "one put message is to player0" $ isJust $ List.find (\(addr, _) -> addr == Just "player0") putMsgs
-          assertBool "one put message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") putMsgs
-          assertBool "one put message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") putMsgs
+          assertBool "one take message is to player0" $ isJust $ List.find (\(addr, _) -> addr == "player0") takeMsgs
+          assertBool "one take message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") takeMsgs
+          assertBool "one take message is to player2" $ isJust $ List.find (\(addr, _) -> addr == "player2") takeMsgs
+          assertBool "one put message is to player0" $ isJust $ List.find (\(addr, _) -> addr == "player0") putMsgs
+          assertBool "one put message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") putMsgs
+          assertBool "one put message is to player2" $ isJust $ List.find (\(addr, _) -> addr == "player2") putMsgs
       )
     , it "two players A and B enter. B exits and leaves its character behind. A changes it's nick to the nick of B, but must still control A's character."
       ( TestCase $ do
           let (world2, (inputMsgs, outputMsgs, debugs)) = State.runState (run world) (
-                [ (MsgPlayerEnters (Just "playerA") "Hel Mut" "hel.mut@localhost")
-                , (MsgPlayerEnters (Just "playerB") "Ara Gorn" "ara.gorn@localhost")
+                [ (MsgPlayerEnters "playerA" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "playerB" "Ara Gorn" "ara.gorn@localhost")
                 -- now, Ara Gorn leaves and playerA tries to impersonate playerB
-                , (MsgPlayerEnters (Just "playerB") "Hel Mut" "hel.mut@localhost")
-                , (MsgCommand      (Just "playerB") (words "goto town"))
+                , (MsgPlayerEnters "playerB" "Hel Mut" "hel.mut@localhost")
+                , (MsgCommand      "playerB" (words "goto town"))
                 ], []::[TestStateOutgoing], []::[String])
           mapM_ (hPutStrLn stderr) debugs
           let unicorn = fromRight $ findRoom "Black Unicorn" world2
@@ -188,17 +188,17 @@ specs = descriptions
     [ it "can only be heard in the current room"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
-                , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
-                , (MsgPlayerEnters (Just "player2") "Bil Bo" "bil.bo@localhost")
-                , (MsgCommand      (Just "player0") (words "goto town"))
-                , (MsgCommand      (Just "player1") (words "say hello"))
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "player1" "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerEnters "player2" "Bil Bo" "bil.bo@localhost")
+                , (MsgCommand      "player0" (words "goto town"))
+                , (MsgCommand      "player1" (words "say hello"))
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           let sayMsgs = List.filter (isMsgSay . snd) outputMsgs
           assertEqual "we got 2 say messages" 2 $ length sayMsgs
-          assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") sayMsgs
-          assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") sayMsgs
+          assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") sayMsgs
+          assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == "player2") sayMsgs
       )
     ]
 
@@ -206,17 +206,17 @@ specs = descriptions
     [ it "can only be heard by the receipient and the speaker"
       ( TestCase $ do
           let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
-                [ (MsgPlayerEnters (Just "player0") "Hel Mut" "hel.mut@localhost")
-                , (MsgPlayerEnters (Just "player1") "Ara Gorn" "ara.gorn@localhost")
-                , (MsgPlayerEnters (Just "player2") "Bil Bo" "bil.bo@localhost")
-                , (MsgCommand      (Just "player0") (words "goto town"))
-                , (MsgCommand      (Just "player1") (words "tell Bil $ hello"))
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "player1" "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerEnters "player2" "Bil Bo" "bil.bo@localhost")
+                , (MsgCommand      "player0" (words "goto town"))
+                , (MsgCommand      "player1" (words "tell Bil $ hello"))
                 ], []::[TestStateOutgoing], []::[String])
           assertBool "input messages are all consumed" $ null inputMsgs
           let tellMsgs = List.filter (isMsgTell . snd) outputMsgs
           assertEqual "we got 2 tell messages" 2 $ length tellMsgs
-          assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == Just "player2") tellMsgs
-          assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == Just "player1") tellMsgs
+          assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == "player2") tellMsgs
+          assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") tellMsgs
       )
     ]
 

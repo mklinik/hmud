@@ -38,7 +38,7 @@ npc0 = Character
   , charGender = Male
   , charLevel = 17
   , charInventory = []
-  , charAddress = Nothing
+  , charAddress = ""
   , charId = "chris@localhost"
   }
 
@@ -49,7 +49,7 @@ player0 = Character
   , charGender = Female
   , charLevel = 1
   , charInventory = []
-  , charAddress = Just "player0addr"
+  , charAddress = "player0addr"
   , charId = "player0@localhost"
   }
 

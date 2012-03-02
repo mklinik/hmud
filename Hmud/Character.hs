@@ -7,7 +7,7 @@ import qualified Control.Monad.Error
 import Hmud.Describable
 import Hmud.Item
 
-type Address = Maybe String
+type Address = String
 
 data Race = Human | Elven | Dwarven
   deriving (Eq, Show, Enum, Bounded)

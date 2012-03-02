@@ -77,10 +77,9 @@ instance MonadHmud XMPP where
     msg <- waitForMessageXmpp
     liftIO $ logString $ ">> " ++ show msg
     return msg
-  sendMessage Nothing _ = return ()
-  sendMessage (Just addr) msg = do
+  sendMessage addr msg = do
     liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
-    XMPP.sendMessage addr $  describeMessage (Just addr) msg
+    XMPP.sendMessage addr $ describeMessage addr msg
   mkRandomCharacter = randomCharacter
   debugOut = liftIO . putStrLn
 
@@ -98,7 +97,7 @@ stanza2incomingMessage stanza
       tokens <- words `fmap` (XMPP.getMessageBody stanza)
       if sender == botJID
         then Nothing -- filter messages from myself
-        else return $ MsgCommand (Just sender) tokens
+        else return $ MsgCommand sender tokens
   | XMPP.isGroupchatPresence stanza = do
       sender <- XMPP.getAttr "from" stanza
       let (presence, occupant) = XMPP.doGroupchatPresence stanza
@@ -106,7 +105,7 @@ stanza2incomingMessage stanza
       jid <- XMPP.occJid occupant
       if jid == botJID
         then Nothing -- filter presence msg from myself
-        else return $ MsgPlayerEnters (Just sender) (jid2player jid) (jid2primKey jid)
+        else return $ MsgPlayerEnters sender (jid2player jid) (jid2primKey jid)
   | otherwise = Nothing
 
 handlePing :: XMPP.XMLElem -> XMPP ()
