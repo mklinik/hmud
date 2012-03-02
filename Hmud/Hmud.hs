@@ -6,9 +6,6 @@ import Control.Monad.State (State)
 
 import Hmud.Message
 import Hmud.Character
-import Hmud.World
-import Hmud.Util
-import Hmud.Describable
 
 class Monad m => MonadHmud m where
   waitForMessage :: m IncomingMessage

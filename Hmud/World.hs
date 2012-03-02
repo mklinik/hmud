@@ -1,7 +1,6 @@
 module Hmud.World where
 
-import Data.List (isPrefixOf, find, delete, deleteBy, intercalate)
-import qualified Control.Monad.Error
+import Data.List (isPrefixOf, find, delete, intercalate)
 import Data.Either (rights)
 
 import Hmud.Describable
@@ -54,14 +53,14 @@ findRoomOfPlayerByAddress playerAddr world =
   case filter (roomHasCharacterByAddress playerAddr) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerAddr)
     r:[]      -> Right r
-    otherwise -> Left $ "ambiguous character name: " ++ (show playerAddr) -- should never happen
+    _         -> Left $ "ambiguous character name: " ++ (show playerAddr) -- should never happen
 
 findRoomOfPlayerById :: String -> World -> Either String Room
 findRoomOfPlayerById playerId world =
   case filter (roomHasCharacterById playerId) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerId)
     r:[]      -> Right r
-    otherwise -> Left $ "ambiguous character name: " ++ (show playerId) -- should never happen
+    _         -> Left $ "ambiguous character name: " ++ (show playerId) -- should never happen
 
 -- Assuming that player names are unique, if we find any players at all, we only find one
 findCharacterByAddress :: Address -> World -> Either String Character
@@ -69,21 +68,21 @@ findCharacterByAddress playerAddr world =
   case rights $ map (findCharacterInRoomByAddress playerAddr) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerAddr)
     p:[]      -> Right p
-    otherwise -> Left $ "ambiguous character name: " ++ (show playerAddr)
+    _         -> Left $ "ambiguous character name: " ++ (show playerAddr)
 
 findCharacterById :: String -> World -> Either String Character
 findCharacterById playerId world =
   case rights $ map (findCharacterInRoomById playerId) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerId)
     p:[]      -> Right p
-    otherwise -> Left $ "ambiguous character name: " ++ (show playerId)
+    _         -> Left $ "ambiguous character name: " ++ (show playerId)
 
 findCharacter :: String -> World -> Either String Character
 findCharacter playerName world =
   case rights $ map (findCharacterInRoom playerName) (worldRooms world) of
     []        -> Left $ "no such character: " ++ (show playerName)
     p:[]      -> Right p
-    otherwise -> Left $ "ambiguous character name: " ++ (show playerName)
+    _         -> Left $ "ambiguous character name: " ++ (show playerName)
 
 characterPickupItem :: Address -> String -> World -> Either String (World, Character, Item)
 characterPickupItem playerAddr itName world = do

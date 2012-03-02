@@ -2,7 +2,7 @@ module Hmud.Character where
 
 import Data.List
 import Data.Char (toLower)
-import qualified Control.Monad.Error
+import qualified Control.Monad.Error ()
 
 import Hmud.Describable
 import Hmud.Item
@@ -28,6 +28,7 @@ data Role = Fool
           | King
   deriving (Eq, Show, Enum, Bounded)
 
+genderedRoles :: [(Role, (String, String))]
 genderedRoles =
   --              Male           Female
   [ (Fool,       ("Fool",        "Fool"))
@@ -77,6 +78,7 @@ instance Describable Character where
 instance Show Character where
   show = charName
 
+giveItemToCharacter :: Item -> Character -> Character
 giveItemToCharacter item char = char { charInventory = item : (charInventory char) }
 
 characterFindItem :: String -> Character -> Either String Item

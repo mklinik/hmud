@@ -50,14 +50,14 @@ describeThing room [] _ = "This is " ++ (name room) ++ ", " ++ (describe room)
 describeThing room arg playerAddr =
   case findCharacterInRoom arg room of
     Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
-    Left err ->
+    Left _ ->
       case findItemInRoom arg room of
         Right p  -> "You see " ++ (name p) ++ ", " ++ (describe p)
-        Left err -> case findCharacterInRoomByAddress playerAddr room of
+        Left _ -> case findCharacterInRoomByAddress playerAddr room of
           Right p  -> case characterFindItem arg p of
             Right i  -> "You see " ++ (name i) ++ ", " ++ (describe i)
-            Left err -> "you can't see " ++ arg
-          Left err -> "you can't see " ++ arg
+            Left _ -> "you can't see " ++ arg
+          Left _ -> "you can't see " ++ arg
 
 lookAt :: Address -> [String] -> WorldAction
 lookAt playerAddr args world =
@@ -74,7 +74,7 @@ inventory playerAddr _ world = case findCharacterByAddress playerAddr world of
                 )
 
 pickup :: Address -> [String] -> WorldAction
-pickup playerAddr [] world =
+pickup _ [] world =
     (world, MsgInfo $ "You take nothing.")
 pickup playerAddr args world =
   case characterPickupItem playerAddr (unwords args) world of
@@ -82,7 +82,7 @@ pickup playerAddr args world =
     Right (w, c, i) -> (w, MsgTake c i)
 
 put :: Address -> [String] -> WorldAction
-put playerAddr [] world =
+put _ [] world =
     (world, MsgInfo "You drop nothing.")
 put playerAddr args world =
   case characterPutItem playerAddr (unwords args) world of
@@ -111,7 +111,7 @@ forge playerAddr args world =
       else (world, MsgInfo $ "usage: forge <item-name> $ <item-description>")
 
 discard :: Address -> [String] -> WorldAction
-discard playerAddr [] world = do
+discard _ [] world = do
     (world, MsgInfo "You discard nothing.")
 discard playerAddr args world =
   case do
@@ -166,10 +166,10 @@ tell playerAddr args world =
              case do char <- findCharacterByAddress playerAddr world
                      room <- findRoomOfPlayerByAddress playerAddr world
                      receiver <- findCharacterInRoom receiverName room
-                     Right (world, char, receiver, text)
+                     Right (world, char, receiver)
              of
                Left err -> (world, MsgInfo err)
-               Right (w, speaker, listener, text)  -> (w, MsgTell speaker listener text)
+               Right (w, speaker, listener)  -> (w, MsgTell speaker listener text)
       else (world, MsgInfo "usage: tell <player-name> $ <text>")
 
 me :: Address -> [String] -> WorldAction
@@ -178,10 +178,11 @@ me playerAddr args world = do
      Left err -> (world, MsgInfo err)
      Right char -> (world, MsgMe char (unwords args))
 
+abbreviationInfo :: String
 abbreviationInfo = "\nCommands and names can be abbreviated when unambiguous.\n\"i\" instead of \"inventory\", \"go For\" instead of \"goto Forest\", \"gi scr to Mon\" instead of \"give scroll of forgery to Monika\"\n"
 
 help :: Address -> [String] -> WorldAction
-help playerAddr args world
+help _ args world
   | args == ["commands"] = (world, MsgInfo $ abbreviationInfo ++ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
   | otherwise = (world, MsgInfo $ "Welcome to "++ gameName ++". Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
   )
@@ -207,38 +208,38 @@ stepWorld sender world action = do
   let (newWorld, message) = action world
 
   case message of
-    MsgInfo m -> sendMessage sender message
-    MsgGoto fromRoom char toRoom ->
+    MsgInfo _ -> sendMessage sender message
+    MsgGoto fromRoom _ toRoom ->
       mapM_ (\char -> sendMessage (charAddress char) message)
         $ (roomCharacters fromRoom) ++ (roomCharacters toRoom)
-    MsgTake char item -> do
+    MsgTake char _ -> do
       case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgPut char item -> do
+    MsgPut char _ -> do
       case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgGive giver item receiver -> do
+    MsgGive giver _ _ -> do
       case findRoomOfPlayerByAddress (charAddress giver) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgForge char item -> sendMessage sender message
-    MsgSay char text -> do
+    MsgForge _ _ -> sendMessage sender message
+    MsgSay char _ -> do
       case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
-    MsgTell speaker listener text -> if speaker == listener
+    MsgTell speaker listener _ -> if speaker == listener
       then
         sendMessage (charAddress listener) message
       else do
         sendMessage (charAddress listener) message
         sendMessage (charAddress speaker) message
-    MsgMe char text -> do
+    MsgMe char _ -> do
       case findRoomOfPlayerByAddress (charAddress char) newWorld of
         Left err -> debugOut err
         Right room ->

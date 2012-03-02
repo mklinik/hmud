@@ -6,8 +6,11 @@ import qualified Random
 import Hmud.Character
 import Data.Char
 
+gameName :: String
 gameName = "The Tower"
+homepageURL :: String
 homepageURL = "http://mklinik.github.com/hmud"
+hmudVersion :: String
 hmudVersion = "0.1"
 
 randomEnum :: forall a. (Enum a, Bounded a) => IO a

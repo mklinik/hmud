@@ -30,24 +30,31 @@ data IncomingMessage =
   | MsgExit
   deriving (Show, Eq)
 
+isMsgGoto :: Message -> Bool
 isMsgGoto (MsgGoto _ _ _) = True
 isMsgGoto _ = False
 
+isMsgTake :: Message -> Bool
 isMsgTake (MsgTake _ _) = True
 isMsgTake _ = False
 
+isMsgPut :: Message -> Bool
 isMsgPut (MsgPut _ _) = True
 isMsgPut _ = False
 
+isMsgGive :: Message -> Bool
 isMsgGive (MsgGive _ _ _) = True
 isMsgGive _ = False
 
+isMsgForge :: Message -> Bool
 isMsgForge (MsgForge _ _) = True
 isMsgForge _ = False
 
+isMsgSay :: Message -> Bool
 isMsgSay (MsgSay _ _) = True
 isMsgSay _ = False
 
+isMsgTell :: Message -> Bool
 isMsgTell (MsgTell _ _ _) = True
 isMsgTell _ = False
 
@@ -72,15 +79,15 @@ describeMessage receiver (MsgGive giver item givee)
   | receiver == (charAddress giver) = "You give " ++ (doArticleMagic $ name item) ++ " to " ++ (name givee)
   | receiver == (charAddress givee) = (name giver) ++ " gives you " ++ (doArticleMagic $ name item)
   | otherwise = (name giver) ++ " gives " ++ (doArticleMagic $ name item) ++ " to " ++ (name givee)
-describeMessage receiver (MsgSay sayer text) = (name sayer) ++ " says: " ++ text
+describeMessage _ (MsgSay sayer text) = (name sayer) ++ " says: " ++ text
 describeMessage receiver (MsgTell speaker listener text)
   | (charAddress listener) == (charAddress speaker) = "Continue speaking to yourself and I'll call the doctor."
   | receiver == (charAddress speaker) = "You tell " ++ (name listener) ++ ": " ++ text
   | receiver == (charAddress listener) = (name speaker) ++ " tells you: " ++ text
   | otherwise = (name speaker) ++ " tells " ++ (name listener) ++ ": " ++ text -- should never happen
-describeMessage receiver (MsgMe sayer text) = (name sayer) ++ " " ++ text
+describeMessage _ (MsgMe sayer text) = (name sayer) ++ " " ++ text
 
 -- if /name/ starts with a lower letter, add the article 'a' to it
 doArticleMagic :: String -> String
 doArticleMagic [] = []
-doArticleMagic name@(c:cs) = if isLower c then "a " ++ name else name
+doArticleMagic nam@(c:_) = if isLower c then "a " ++ nam else nam

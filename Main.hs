@@ -1,18 +1,11 @@
 {-# LANGUAGE FlexibleInstances #-}
-import Control.Monad
+module Main where
 
-import System.IO (hFlush, stdout)
 import System.Console.Haskeline
-import Data.List (isPrefixOf, intercalate)
 import Control.Monad.Trans (liftIO)
 
 import Hmud.Hmud
 import Hmud.Message
-import Hmud.Item
-import Hmud.Describable
-import Hmud.Character
-import Hmud.Room
-import Hmud.World
 import Hmud.Util
 import Hmud.TestData
 import Hmud.Commands
@@ -41,6 +34,6 @@ main = runInputT defaultSettings $ do
   w7 <- stepWorld "" w6 (insertItem beer "Black Unicorn")
   w8 <- stepWorld "" w7 (insertItem scroll1 "Black Unicorn")
 
-  run w8
+  _ <- run w8
 
   liftIO $ putStrLn "bye."

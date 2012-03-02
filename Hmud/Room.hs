@@ -1,7 +1,7 @@
 module Hmud.Room where
 
 import Data.List (find, intercalate, isPrefixOf, delete)
-import qualified Control.Monad.Error
+import qualified Control.Monad.Error ()
 
 import Hmud.Describable
 import Hmud.Character
@@ -35,8 +35,9 @@ instance Describable Room where
 instance Show Room where
   show = name
 
-mkRoom name description adjacents items =
-  Room { roomName = name
+mkRoom :: String -> String -> [String] -> [Item] -> Room
+mkRoom romName description adjacents items =
+  Room { roomName = romName
        , roomDescription = description
        , roomCharacters = []
        , roomItems = items
