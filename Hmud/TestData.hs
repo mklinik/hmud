@@ -63,4 +63,4 @@ player0 = Character
   }
 
 world :: World
-world = World { worldRooms = [tavern, townSquare, ivoryTower] }
+world = World { worldRooms = [tavern, townSquare, ivoryTower], idleCharacters = [] }

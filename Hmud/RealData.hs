@@ -27,4 +27,4 @@ ivoryTower = mkRoom
   [(name townSquare)]
   [theScrollOfForgery]
 
-world = World { worldRooms = [tavern, townSquare, ivoryTower] }
+world = World { worldRooms = [tavern, townSquare, ivoryTower], idleCharacters = [] }

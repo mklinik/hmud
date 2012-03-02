@@ -23,7 +23,7 @@ import Hmud.Item
 import Hmud.Commands
 import Xmpp.Util
 
-emptyWorld = World { worldRooms = [] }
+emptyWorld = World { worldRooms = [], idleCharacters = [] }
 
 specs :: Specs
 specs = descriptions
@@ -217,6 +217,76 @@ specs = descriptions
           assertEqual "we got 2 tell messages" 2 $ length tellMsgs
           assertBool "one say message is to player2" $ isJust $ List.find (\(addr, _) -> addr == "player2") tellMsgs
           assertBool "one say message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") tellMsgs
+      )
+    ]
+
+  , describe "MsgPlayerLeaves"
+    [ it "puts the leaving player from the room in the idle list"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerLeaves "player0")
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let unicorn = fromRight $ findRoom "Black Unicorn" newWorld
+          assertBool "Black Unicorn is empty" $ null $ roomCharacters unicorn
+          assertBool "Hel Mut is in the idle list" $ isJust $ List.find (\c -> charAddress c == "player0") (idleCharacters newWorld)
+      )
+    , it "inserts a player back to the game when the player enters again"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerLeaves "player0")
+                , (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let unicorn = fromRight $ findRoom "Black Unicorn" newWorld
+          assertEqual "Black Unicorn is not empty" 1 (length $ roomCharacters unicorn)
+          assertBool "the idle list is empty" $ null $ (idleCharacters newWorld)
+      )
+    , it "other players can not speak to a left player"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "player1" "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerLeaves "player0")
+                , (MsgCommand      "player1" (words "tell Hel Mut $ hello"))
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let tellMsgs = List.filter (isMsgTell . snd) outputMsgs
+          assertBool "we got no tell messages" $ null tellMsgs
+      )
+    , it "when a player enters again, everything is back to normal"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "player1" "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerLeaves "player0")
+                , (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgCommand      "player1" (words "tell Hel Mut $ hello"))
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let tellMsgs = List.filter (isMsgTell . snd) outputMsgs
+          assertEqual "we got 2 tell messages" 2 $ length tellMsgs
+          assertBool "one tell message is to player0" $ isJust $ List.find (\(addr, _) -> addr == "player0") tellMsgs
+          assertBool "one tell message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") tellMsgs
+          assertBool "the idle list is empty" $ null $ (idleCharacters newWorld)
+      )
+    , it "when a player enters again but with a different address, everything works just fine"
+      ( TestCase $ do
+          let (newWorld, (inputMsgs, outputMsgs, _)) = State.runState (run world) (
+                [ (MsgPlayerEnters "player0" "Hel Mut" "hel.mut@localhost")
+                , (MsgPlayerEnters "player1" "Ara Gorn" "ara.gorn@localhost")
+                , (MsgPlayerLeaves "player0")
+                , (MsgPlayerEnters "player2" "Hel Mut" "hel.mut@localhost")
+                , (MsgCommand      "player1" (words "tell Hel Mut $ hello"))
+                ], []::[TestStateOutgoing], []::[String])
+          assertBool "input messages are all consumed" $ null inputMsgs
+          let tellMsgs = List.filter (isMsgTell . snd) outputMsgs
+          assertEqual "we got 2 tell messages" 2 $ length tellMsgs
+          assertBool "one tell message is to player2" $ isJust $ List.find (\(addr, _) -> addr == "player2") tellMsgs
+          assertBool "one tell message is to player1" $ isJust $ List.find (\(addr, _) -> addr == "player1") tellMsgs
+          assertBool "the idle list is empty" $ null $ (idleCharacters newWorld)
       )
     ]
 

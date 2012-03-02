@@ -1,6 +1,6 @@
 module Hmud.Commands where
 
-import Data.List (isPrefixOf, intercalate)
+import Data.List (isPrefixOf, intercalate, delete)
 
 import Hmud.Describable
 import Hmud.World
@@ -273,23 +273,33 @@ dispatch playerAddr tokens = do
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
                      ++ (intercalate ", " $ map (\(cname, _, _) -> cname) cs)
 
+{--
+nirvana :: Room
+nirvana = mkRoom
+  "The Real World (tm)"
+  "where the pizza comes from"
+  []
+  []
+--}
+
 run :: MonadHmud m => World -> m World
 run world = do
   msg <- waitForMessage
   case msg of
     MsgCommand playerAddr tokens -> case dispatch playerAddr tokens of
           Nothing -> run world -- empty command
-          Just a  -> do
-            w2 <- stepWorld playerAddr world a
-            run w2
-    MsgPlayerEnters playerAddr playerName primKey -> do
-      newWorld <- do
+          Just a  -> stepWorld playerAddr world a >>= run
+    MsgPlayerEnters playerAddr playerName primKey ->
         case findCharacterById primKey world of
-          Left _ -> do
-            player <- mkRandomCharacter playerName playerAddr primKey
-            newWorld <- stepWorld playerAddr world (insertNewPlayer player "Black Unicorn")
-            return newWorld
-          Right char -> case do
+          Left _ -> do -- no such character in any of the rooms
+            case getIdleCharacterById primKey world of
+              Nothing -> do -- we have ourselves a brand new player!
+                player <- mkRandomCharacter playerName playerAddr primKey
+                stepWorld playerAddr world (insertNewPlayer player "Black Unicorn")
+              Just (char, newWorld) -> do -- the player has been idle and came back
+                let newChar = char { charAddress = playerAddr }
+                stepWorld playerAddr newWorld (insertNewPlayer newChar "Black Unicorn")
+          Right char -> case do -- the same player entered the group chat again, but with a different nick
               room <- findRoomOfPlayerById primKey world
               let newChar = char { charAddress = playerAddr }
               newRoom <- updateCharInRoom newChar room
@@ -297,5 +307,17 @@ run world = do
             of
               Left err -> debugOut err >> return world
               Right newWorld -> return newWorld
-      run newWorld
+      >>= run
+    MsgPlayerLeaves playerAddr -> case do
+        room <- findRoomOfPlayerByAddress playerAddr world
+        let remainingRooms = delete room (worldRooms world)
+        char <- findCharacterInRoomByAddress playerAddr room
+        let newRoom = room { roomCharacters = delete char (roomCharacters room) }
+        Right (world { worldRooms = newRoom:remainingRooms
+                     , idleCharacters = char:(idleCharacters world)
+                     }, newRoom, char)
+      of
+        Left err -> debugOut err >> run world
+        Right (newWorld, newRoom, char) -> run newWorld
+            -- stepWorld playerAddr newWorld (const (newWorld, MsgGoto newRoom char nirvana)) >>= run
     MsgExit -> return world

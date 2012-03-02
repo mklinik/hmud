@@ -9,6 +9,7 @@ import Hmud.Character
 import Hmud.Item
 
 data World = World { worldRooms :: [Room]
+                   , idleCharacters :: [Character]
                    }
   deriving Eq
 
@@ -108,3 +109,13 @@ characterPutItem playerAddr itName world = do
   tmpWorld <- updateRoomInWorld newRoom world
   newWorld <- insertItemToRoom item (name newRoom) tmpWorld
   Right (newWorld, newChar, item)
+
+getIdleCharacterById :: String -> World -> Maybe (Character, World)
+getIdleCharacterById primKey world = do
+  (found, restIdles) <- extract (\c -> charId c == primKey) (idleCharacters world)
+  return (found, world { idleCharacters = restIdles })
+
+extract :: (a -> Bool) -> [a] -> Maybe (a, [a])
+extract p xs = case break p xs of
+  (nots, found:rest) -> Just (found, nots ++ rest)
+  _ -> Nothing
