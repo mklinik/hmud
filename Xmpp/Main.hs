@@ -73,7 +73,10 @@ main = withSocketsDo $ do
         return ()
 
 instance MonadHmud XMPP where
-  waitForMessage = waitForMessageXmpp
+  waitForMessage = do
+    msg <- waitForMessageXmpp
+    liftIO $ logString $ ">> " ++ show msg
+    return msg
   sendMessage Nothing _ = return ()
   sendMessage (Just addr) msg = do
     liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
@@ -84,41 +87,35 @@ instance MonadHmud XMPP where
 waitForMessageXmpp :: XMPP IncomingMessage
 waitForMessageXmpp = do
   stanza <- XMPP.waitForStanza (const True)
-  if (XMPP.isChat `XMPP.conj` XMPP.hasBody) stanza
-    then do
-      let sender = XMPP.getAttr "from" stanza
-          tokens = words $ maybe "" id (XMPP.getMessageBody stanza)
-      case sender of
-        Nothing -> waitForMessageXmpp
-        Just playerAddr | playerAddr == botJID -> waitForMessageXmpp
-        Just playerAddr -> do
-          liftIO $ logString $ ">> " ++ playerAddr ++ ": " ++ (unwords tokens)
-          return $ MsgCommand (Just playerAddr) tokens
-    else if XMPP.isGroupchatPresence stanza
-      then do
-        let sender = XMPP.getAttr "from" stanza
-        case sender of
-          Nothing -> waitForMessageXmpp
-          playerAddr -> do
-            let (presence, occupant) = XMPP.doGroupchatPresence stanza
-            case presence of
-              XMPP.RoleChange _ -> do -- a user has joined or changed nick
-                case XMPP.occJid occupant of
-                  Nothing -> waitForMessageXmpp -- anonymous users don't get a character
-                  Just jid -> if (jid == botJID)
-                    then waitForMessageXmpp -- filter presence msg from myself
-                    else do
-                      let msg = MsgPlayerEnters playerAddr (jid2player jid) (jid2primKey jid)
-                      liftIO $ logString $ ">> " ++ show msg
-                      return msg
-              otherwise -> waitForMessageXmpp
-      else if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza)
-        then do
-          let idAttr = maybe "" id (XMPP.getAttr "id" stanza)
-              from = maybe "" id (XMPP.getAttr "from" stanza)
-              to =  maybe "" id (XMPP.getAttr "to" stanza)
-              pong = XMPP.XML "iq" [("from", to), ("to", from), ("id", idAttr), ("type", "result")] []
-          XMPP.sendStanza pong
-          waitForMessageXmpp
-        else
-          waitForMessageXmpp
+  if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza)
+    then handlePing stanza >> waitForMessageXmpp
+    else maybe waitForMessageXmpp return $ stanza2incomingMessage stanza
+
+stanza2incomingMessage :: XMPP.XMLElem -> Maybe IncomingMessage
+stanza2incomingMessage stanza
+  | XMPP.isChat stanza = do
+      sender <- XMPP.getAttr "from" stanza
+      tokens <- words `fmap` (XMPP.getMessageBody stanza)
+      if sender == botJID
+        then Nothing -- filter messages from myself
+        else return $ MsgCommand (Just sender) tokens
+  | XMPP.isGroupchatPresence stanza = do
+      sender <- XMPP.getAttr "from" stanza
+      let (presence, occupant) = XMPP.doGroupchatPresence stanza
+      XMPP.RoleChange _ <- return presence
+      jid <- XMPP.occJid occupant
+      if jid == botJID
+        then Nothing -- filter presence msg from myself
+        else return $ MsgPlayerEnters (Just sender) (jid2player jid) (jid2primKey jid)
+  | otherwise = Nothing
+
+handlePing :: XMPP.XMLElem -> XMPP ()
+handlePing stanza = do
+  maybe (return ()) (XMPP.sendStanza) $ constructPong stanza
+
+constructPong :: XMPP.XMLElem -> Maybe XMPP.XMLElem
+constructPong stanza = do
+  idAttr <- XMPP.getAttr "id" stanza
+  from   <- XMPP.getAttr "from" stanza
+  to     <- XMPP.getAttr "to" stanza
+  return $ XMPP.XML "iq" [("from", to), ("to", from), ("id", idAttr), ("type", "result")] []
