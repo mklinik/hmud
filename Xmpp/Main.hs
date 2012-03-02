@@ -84,7 +84,6 @@ main = withSocketsDo $ do
         error "Authentication not successful."
       else do
         XMPP.sendPresence (Just ("", [homepageURL, ""])) Nothing
-        XMPP.handleVersion "hmud" "0.1" "Linux"
         -- ...and do something.
 
         XMPP.joinGroupchat
