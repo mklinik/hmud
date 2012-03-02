@@ -28,14 +28,30 @@ import Hmud.Message
 import Hmud.Hmud
 import Xmpp.Util
 
--- The bot's JID is "bot@example.com"
-botUsername = "oracle"
-botServer = "localhost"
-botPassword = "abc"
-botResource = "oracle"
-groupchatJID = "gtf@conference." ++ botServer
-groupchatPassword = Nothing
-botJID = botUsername ++ "@" ++ botServer ++ "/" ++ botResource
+data XmppConfig = XmppConfig
+  { xmppUsername :: String
+  , xmppServer :: String
+  , xmppPassword :: String
+  , xmppResource :: String
+  , xmppGroupchatRoom :: String
+  , xmppGroupchatPassword :: Maybe String
+  , xmppGroupchatNick :: String
+  }
+
+xmppConfig :: XmppConfig
+xmppConfig = XmppConfig
+  { xmppUsername = "oracle"
+  , xmppServer = "localhost"
+  , xmppPassword = "abc"
+  , xmppResource = "oracle"
+  , xmppGroupchatRoom = "gtf@conference.localhost"
+  , xmppGroupchatPassword = Nothing
+  , xmppGroupchatNick = "oracle"
+  }
+
+botJid :: XmppConfig -> String
+botJid cfg =
+  (xmppUsername cfg) ++ "@" ++ (xmppServer cfg) ++ "/" ++ (xmppResource cfg)
 
 logString :: String -> IO ()
 logString s = do
@@ -51,14 +67,18 @@ main = withSocketsDo $ do
   -- s <- XMPP.connectStream [("localhost", PortNumber 31337)]
   -- c <- XMPP.sendStreamHeader s botServer
   -- OR: Connect to server without SSL
-  c <- XMPP.openStream botServer
+  c <- XMPP.openStream (xmppServer xmppConfig)
   -- DONE connecting
 
   XMPP.getStreamStart c
 
   XMPP.runXMPP c $ do
     -- ...authenticate...
-    success <- XMPP.startAuth botUsername botServer botPassword botResource
+    success <- XMPP.startAuth
+        (xmppUsername xmppConfig)
+        (xmppServer xmppConfig)
+        (xmppPassword xmppConfig)
+        (xmppResource xmppConfig)
     if success /= 0
       then
         error "Authentication not successful."
@@ -67,7 +87,10 @@ main = withSocketsDo $ do
         XMPP.handleVersion "hmud" "0.1" "Linux"
         -- ...and do something.
 
-        XMPP.joinGroupchat "oracle" groupchatJID groupchatPassword
+        XMPP.joinGroupchat
+            (xmppGroupchatNick xmppConfig)
+            (xmppGroupchatRoom xmppConfig)
+            (xmppGroupchatPassword xmppConfig)
 
         run world
         return ()
@@ -95,7 +118,7 @@ stanza2incomingMessage stanza
   | XMPP.isChat stanza = do
       sender <- XMPP.getAttr "from" stanza
       tokens <- words `fmap` (XMPP.getMessageBody stanza)
-      if sender == botJID
+      if sender == botJid xmppConfig
         then Nothing -- filter messages from myself
         else return $ MsgCommand sender tokens
   | XMPP.isGroupchatPresence stanza = do
@@ -103,7 +126,7 @@ stanza2incomingMessage stanza
       let (presence, occupant) = XMPP.doGroupchatPresence stanza
       XMPP.RoleChange _ <- return presence
       jid <- XMPP.occJid occupant
-      if jid == botJID
+      if jid == botJid xmppConfig
         then Nothing -- filter presence msg from myself
         else return $ MsgPlayerEnters sender (jid2player jid) (jid2primKey jid)
   | otherwise = Nothing
