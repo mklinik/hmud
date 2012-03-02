@@ -123,11 +123,15 @@ stanza2incomingMessage stanza
   | XMPP.isGroupchatPresence stanza = do
       sender <- XMPP.getAttr "from" stanza
       let (presence, occupant) = XMPP.doGroupchatPresence stanza
-      XMPP.RoleChange _ <- return presence
-      jid <- XMPP.occJid occupant
-      if jid == botJid xmppConfig
-        then Nothing -- filter presence msg from myself
-        else return $ MsgPlayerEnters sender (jid2player jid) (jid2primKey jid)
+      case presence of
+        XMPP.RoleChange _ -> do
+          jid <- XMPP.occJid occupant
+          if jid == botJid xmppConfig
+            then Nothing -- filter presence msg from myself
+            else return $ MsgPlayerEnters sender (jid2player jid) (jid2primKey jid)
+        XMPP.Leave ->
+          return $ MsgPlayerLeaves sender
+        _ -> Nothing
   | otherwise = Nothing
 
 handlePing :: XMPP.XMLElem -> XMPP ()
