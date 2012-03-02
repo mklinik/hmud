@@ -56,6 +56,11 @@ onNick msgMVar server message
         user = B.unpack $ fromJust $ IRC.mUser message
         msg = B.unpack $ IRC.mMsg message
 
+onPart :: MVar IncomingMessage -> IRC.EventFunc
+onPart msgMVar server message =
+  putMVar msgMVar $ MsgPlayerLeaves nick
+    where nick = B.unpack $ fromJust $ IRC.mNick message
+
 instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
   waitForMessage = do
     (_, msgMVar) <- State.get
@@ -73,6 +78,7 @@ main = do
   let events = [ (IRC.Privmsg (onMessage msgMVar))
                , (IRC.Join (onJoin msgMVar))
                , (IRC.Nick (onNick msgMVar))
+               , (IRC.Part (onPart msgMVar))
                ]
   eitherIrc <- IRC.connect (ircConfig { IRC.cEvents = events }) True True
 
