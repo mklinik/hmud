@@ -189,11 +189,11 @@ help _ args world
 
 save :: Address -> [String] -> WorldAction
 save _ (fileName:_) world = (world, MsgSave fileName)
-save _ _ world = (world, MsgInfo $ "usage: save <file-name>")
+save _ _ world = (world, MsgSave "save.txt")
 
 load :: Address -> [String] -> WorldAction
 load _ (fileName:_) world = (world, MsgLoad fileName)
-load _ _ world = (world, MsgInfo $ "usage: load <file-name>")
+load _ _ world = (world, MsgLoad "save.txt")
 
 -- main loop:
 
