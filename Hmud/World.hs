@@ -2,6 +2,7 @@ module Hmud.World where
 
 import Data.List (isPrefixOf, find, delete, intercalate)
 import Data.Either (rights)
+import qualified Control.Exception as Exception
 
 import Hmud.Describable
 import Hmud.Room
@@ -13,6 +14,18 @@ data World = World { worldRooms :: [Room]
                    }
   deriving (Eq, Show, Read)
 
+
+-- Tries to load the savegame with the given name.
+-- If an error occurs, it returns the default world
+loadWorld :: FilePath -> World -> IO World
+loadWorld fileName defaultWorld = do
+  eWorld <- Exception.try (read `fmap` readFile fileName) :: IO (Either Exception.SomeException World)
+  case eWorld of
+    Left _ -> putStrLn "Error loading save game. Using default." >> return defaultWorld
+    Right w -> putStrLn "Succesfully loaded save game." >> return w
+
+saveWorld :: FilePath -> World -> IO ()
+saveWorld fileName w = putStrLn ("Saving to " ++ fileName) >> writeFile fileName (show w)
 
 findRoom :: String -> World -> Either String Room
 findRoom rName world = maybe (Left $ rName ++ ": no such room") Right
