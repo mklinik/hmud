@@ -3,11 +3,11 @@ module Main where
 
 import qualified Network.SimpleIRC as IRC
 import qualified Data.ByteString.Char8 as B
-import Data.Maybe (fromJust, isJust)
-import Control.Concurrent.Chan
-import Control.Concurrent (forkIO)
+import           Data.Maybe (fromJust, isJust)
+import           Control.Concurrent.Chan
+import           Control.Concurrent (forkIO)
 import qualified Control.Monad.State as State
-import Control.Monad.State (liftIO, StateT, evalStateT)
+import           Control.Monad.State (liftIO, StateT, evalStateT)
 
 import Hmud.Item
 import Hmud.Describable
