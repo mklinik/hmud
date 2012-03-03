@@ -4,7 +4,7 @@ module Main where
 import qualified Network.SimpleIRC as IRC
 import qualified Data.ByteString.Char8 as B
 import Data.Maybe (fromJust, isJust)
-import Control.Concurrent.MVar
+import Control.Concurrent.Chan
 import Control.Concurrent (forkIO)
 import qualified Control.Monad.State as State
 import Control.Monad.State (liftIO, StateT, evalStateT)
@@ -29,43 +29,43 @@ ircConfig = IRC.defaultConfig
   , IRC.cEvents = [] -- Events to bind
   }
 
-onMessage :: MVar IncomingMessage -> IRC.EventFunc
-onMessage msgMVar server message
+onMessage :: Chan IncomingMessage -> IRC.EventFunc
+onMessage msgChan server message
   | chan == (IRC.cNick ircConfig) = do -- only private messages to the oracle directly
       let tokens = words $ B.unpack msg
-      putMVar msgMVar $ MsgCommand (B.unpack origin) tokens
+      writeChan msgChan $ MsgCommand (B.unpack origin) tokens
   | otherwise = putStrLn $ show message
   where chan = B.unpack $ fromJust $ IRC.mChan message
         origin = fromJust $ IRC.mOrigin message
         msg = IRC.mMsg message
 
-onJoin :: MVar IncomingMessage -> IRC.EventFunc
-onJoin msgMVar server message
+onJoin :: Chan IncomingMessage -> IRC.EventFunc
+onJoin msgChan server message
   | nick == (IRC.cNick ircConfig) = return () -- ignore the join message from myself
-  | otherwise = putMVar msgMVar $ MsgPlayerEnters nick nick user
+  | otherwise = writeChan msgChan $ MsgPlayerEnters nick nick user
   where nick = B.unpack $ fromJust $ IRC.mNick message
         user = B.unpack $ fromJust $ IRC.mUser message
 
-onNick :: MVar IncomingMessage -> IRC.EventFunc
-onNick msgMVar server message
+onNick :: Chan IncomingMessage -> IRC.EventFunc
+onNick msgChan server message
   | nick == (IRC.cNick ircConfig) = return () -- ignore message from myself
   | otherwise = do
       putStrLn $ "nick change: " ++ nick ++ " -> " ++ msg
-      putMVar msgMVar $ MsgPlayerEnters msg msg user
+      writeChan msgChan $ MsgPlayerEnters msg msg user
   where nick = B.unpack $ fromJust $ IRC.mNick message
         user = B.unpack $ fromJust $ IRC.mUser message
         msg = B.unpack $ IRC.mMsg message
 
-onPart :: MVar IncomingMessage -> IRC.EventFunc
-onPart msgMVar server message =
-  putMVar msgMVar $ MsgPlayerLeaves nick
+onPart :: Chan IncomingMessage -> IRC.EventFunc
+onPart msgChan server message =
+  writeChan msgChan $ MsgPlayerLeaves nick
     where nick = B.unpack $ fromJust $ IRC.mNick message
 
-instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
+instance MonadHmud (StateT (IRC.MIrc, Chan IncomingMessage) IO) where
   waitForMessage = do
-    (_, msgMVar) <- State.get
+    (_, msgChan) <- State.get
     debugOut "waiting for message"
-    liftIO $ takeMVar msgMVar
+    liftIO $ readChan msgChan
   sendMessage addr msg = do
     (server, _) <- State.get
     liftIO $ IRC.sendMsg server (B.pack addr) (B.pack $ describeMessage addr msg)
@@ -75,12 +75,12 @@ instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
   loadGame f m = liftIO $ loadWorld f m
 
 main = do
-  msgMVar <- newEmptyMVar :: IO (MVar IncomingMessage)
+  msgChan <- newChan :: IO (Chan IncomingMessage)
 
-  let events = [ (IRC.Privmsg (onMessage msgMVar))
-               , (IRC.Join (onJoin msgMVar))
-               , (IRC.Nick (onNick msgMVar))
-               , (IRC.Part (onPart msgMVar))
+  let events = [ (IRC.Privmsg (onMessage msgChan))
+               , (IRC.Join (onJoin msgChan))
+               , (IRC.Nick (onNick msgChan))
+               , (IRC.Part (onPart msgChan))
                ]
   eitherIrc <- IRC.connect (ircConfig { IRC.cEvents = events }) True True
 
@@ -88,5 +88,5 @@ main = do
     Left _ -> return () -- connect failed
     Right mirc ->
         liftIO (loadWorld "save.txt" world) >>=
-        \w -> evalStateT (run w) (mirc, msgMVar) >>=
+        \w -> evalStateT (run w) (mirc, msgChan) >>=
         liftIO . saveWorld "save.txt"
