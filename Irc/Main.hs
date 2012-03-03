@@ -25,7 +25,7 @@ ircConfig = IRC.defaultConfig
   , IRC.cNick = "towerOracle"
   , IRC.cUsername = "hmudIrcBot"
   , IRC.cRealname = "hmud irc bot"
-  , IRC.cChannels = ["#hmud"] -- Channels to join on connect
+  , IRC.cChannels = ["#hmudGame"] -- Channels to join on connect
   , IRC.cEvents = [] -- Events to bind
   }
 
@@ -86,6 +86,7 @@ main = do
 
   case eitherIrc of
     Left _ -> return () -- connect failed
-    Right mirc -> do
-      evalStateT (run world) (mirc, msgMVar)
-      return ()
+    Right mirc ->
+        liftIO (loadWorld "save.txt" world) >>=
+        \w -> evalStateT (run w) (mirc, msgMVar) >>=
+        liftIO . saveWorld "save.txt"

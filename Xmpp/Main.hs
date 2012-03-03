@@ -91,8 +91,7 @@ main = withSocketsDo $ do
             (xmppGroupchatRoom xmppConfig)
             (xmppGroupchatPassword xmppConfig)
 
-        run world
-        return ()
+        liftIO (loadWorld "save.txt" world) >>= run >>= liftIO . saveWorld "save.txt"
 
 instance MonadHmud XMPP where
   waitForMessage = do
