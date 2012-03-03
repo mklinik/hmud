@@ -22,10 +22,10 @@ loadWorld fileName defaultWorld = do
   eWorld <- Exception.try (read `fmap` readFile fileName) :: IO (Either Exception.SomeException World)
   case eWorld of
     Left _ -> putStrLn "Error loading save game. Using default." >> return defaultWorld
-    Right w -> putStrLn "Succesfully loaded save game." >> return w
+    Right w -> putStrLn ("Succesfully loaded " ++ fileName) >> return w
 
 saveWorld :: FilePath -> World -> IO ()
-saveWorld fileName w = putStrLn ("Saving to " ++ fileName) >> writeFile fileName (show w)
+saveWorld fileName w = writeFile fileName (show w) >> putStrLn ("Saved to " ++ fileName)
 
 findRoom :: String -> World -> Either String Room
 findRoom rName world = maybe (Left $ rName ++ ": no such room") Right

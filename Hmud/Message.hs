@@ -22,6 +22,8 @@ data Message =
   | MsgSay Character String
   | MsgTell Character Character String
   | MsgMe Character String
+  | MsgSave String
+  | MsgLoad String
   deriving (Eq, Show)
 
 data IncomingMessage =
@@ -87,6 +89,8 @@ describeMessage receiver (MsgTell speaker listener text)
   | receiver == (charAddress listener) = (name speaker) ++ " tells you: " ++ text
   | otherwise = (name speaker) ++ " tells " ++ (name listener) ++ ": " ++ text -- should never happen
 describeMessage _ (MsgMe sayer text) = (name sayer) ++ " " ++ text
+describeMessage _ (MsgSave fileName) = "Save " ++ fileName
+describeMessage _ (MsgLoad fileName) = "Load " ++ fileName
 
 -- if /name/ starts with a lower letter, add the article 'a' to it
 doArticleMagic :: String -> String

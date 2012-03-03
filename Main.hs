@@ -18,6 +18,8 @@ instance MonadHmud (InputT IO) where
   sendMessage addr msg = liftIO . putStrLn $ describeMessage addr msg
   mkRandomCharacter = randomCharacter
   debugOut = liftIO . putStrLn
+  saveGame f w = liftIO $ saveWorld f w
+  loadGame f w = liftIO $ loadWorld f w
 
 main :: IO ()
 main = runInputT defaultSettings $

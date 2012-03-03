@@ -71,6 +71,8 @@ instance MonadHmud (StateT (IRC.MIrc, MVar IncomingMessage) IO) where
     liftIO $ IRC.sendMsg server (B.pack addr) (B.pack $ describeMessage addr msg)
   mkRandomCharacter = randomCharacter
   debugOut = liftIO . putStrLn
+  saveGame f m = liftIO $ saveWorld f m
+  loadGame f m = liftIO $ loadWorld f m
 
 main = do
   msgMVar <- newEmptyMVar :: IO (MVar IncomingMessage)

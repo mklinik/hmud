@@ -187,6 +187,14 @@ help _ args world
   | otherwise = (world, MsgInfo $ "Welcome to "++ gameName ++". Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
   )
 
+save :: Address -> [String] -> WorldAction
+save _ (fileName:_) world = (world, MsgSave fileName)
+save _ _ world = (world, MsgInfo $ "usage: save <file-name>")
+
+load :: Address -> [String] -> WorldAction
+load _ (fileName:_) world = (world, MsgLoad fileName)
+load _ _ world = (world, MsgInfo $ "usage: load <file-name>")
+
 -- main loop:
 
   -- * have one world object
@@ -244,8 +252,20 @@ stepWorld sender world action = do
         Left err -> debugOut err
         Right room ->
           mapM_ (\c -> sendMessage (charAddress c) message) (roomCharacters room)
+    MsgSave _ -> return ()
+    MsgLoad _ -> return ()
 
-  return newWorld
+  newNewWorld <- case message of
+    MsgSave fileName -> do
+      sendMessage sender message
+      saveGame fileName newWorld
+      return newWorld
+    MsgLoad fileName -> do
+      sendMessage sender message
+      loadGame fileName newWorld
+    _ -> return newWorld
+
+  return newNewWorld
 
 -- (commandName, isPublic, command, helpText)
 commands :: [(String, Bool, Address -> [String] -> WorldAction, String)]
@@ -262,6 +282,8 @@ commands =
   , ("tell", True, tell, "tell <player-name> $ <text>\n  Say something that only one other player can hear.")
   , ("me", True, me, "me <text>\n  Do something, everybody in your current room can see it.")
   , ("help", True, help, "")
+  , (":save", False, save, "")
+  , (":load", False, load, "")
   ]
 
 dispatch :: Address -> [String] -> Maybe WorldAction

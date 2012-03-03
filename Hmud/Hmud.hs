@@ -6,12 +6,15 @@ import Control.Monad.State (State)
 
 import Hmud.Message
 import Hmud.Character
+import Hmud.World
 
 class Monad m => MonadHmud m where
   waitForMessage :: m IncomingMessage
   sendMessage :: Address -> Message -> m ()
   mkRandomCharacter :: String -> Address -> String -> m Character
   debugOut :: String -> m ()
+  saveGame :: FilePath -> World -> m ()
+  loadGame :: FilePath -> World -> m World
 
 -- for testing only: maps a list of IncomingMessages to a list of outgoing Messages
 type TestStateOutgoing = (Address, Message)
@@ -37,3 +40,5 @@ instance MonadHmud (State ([IncomingMessage], [TestStateOutgoing], [String])) wh
   debugOut msg = do
     (ins, outs, debugs) <- State.get
     State.put (ins, outs, debugs ++ [msg])
+  saveGame _ _ = return ()
+  loadGame _ w = return w

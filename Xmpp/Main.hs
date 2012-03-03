@@ -104,6 +104,8 @@ instance MonadHmud XMPP where
     XMPP.sendMessage addr $ describeMessage addr msg
   mkRandomCharacter = randomCharacter
   debugOut = liftIO . putStrLn
+  saveGame f w = liftIO $ saveWorld f w
+  loadGame f w = liftIO $ loadWorld f w
 
 waitForMessageXmpp :: XMPP IncomingMessage
 waitForMessageXmpp = do
