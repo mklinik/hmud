@@ -183,7 +183,7 @@ abbreviationInfo = "\nCommands and names can be abbreviated when unambiguous.\n\
 
 help :: Address -> [String] -> WorldAction
 help _ args world
-  | args == ["commands"] = (world, MsgInfo $ abbreviationInfo ++ "\n" ++ (intercalate "\n" $ map (\(_, _, helpText)->helpText) commands))
+  | args == ["commands"] = (world, MsgInfo $ abbreviationInfo ++ "\n" ++ (intercalate "\n" $ map (\(_, _, _, helpText)->helpText) (filter (\(_, public, _, _) -> public) commands)))
   | otherwise = (world, MsgInfo $ "Welcome to "++ gameName ++". Please visit " ++ homepageURL ++ " for even more information.\nType \"help commands\" to get a list of what you can do here."
   )
 
@@ -247,31 +247,32 @@ stepWorld sender world action = do
 
   return newWorld
 
-commands :: [(String, Address -> [String] -> WorldAction, String)]
+-- (commandName, isPublic, command, helpText)
+commands :: [(String, Bool, Address -> [String] -> WorldAction, String)]
 commands =
-  [ ("lookat", lookAt, "lookat\n  Describes your immediate surroundings.\nlookat <name>\n  Look at items or players.")
-  , ("goto", goto, "goto <room-name>\n  Go to a different room.")
-  , ("inventory", inventory, "inventory\n  List your possessions.")
-  , ("take", pickup, "take <item-name>\n  Pick up an item.")
-  , ("put", put, "put <item-name>\n  Put down an item.")
-  , ("forge", forge, "forge <name> $ <description>\n  Create a new item. Requires a scroll of forgery.")
-  , ("delete", discard, "delete <item-name>\n  Delete an item. Completely. Forever. Think twice.")
-  , ("give", give, "give <item-name> to <player-name>\n  Give an item to another player.")
-  , ("say", say, "say <text>\n  Say something, everybody in your current room can hear it.")
-  , ("tell", tell, "tell <player-name> $ <text>\n  Say something that only one other player can hear.")
-  , ("me", me, "me <text>\n  Do something, everybody in your current room can see it.")
-  , ("help", help, "")
+  [ ("lookat", True, lookAt, "lookat\n  Describes your immediate surroundings.\nlookat <name>\n  Look at items or players.")
+  , ("goto", True, goto, "goto <room-name>\n  Go to a different room.")
+  , ("inventory", True, inventory, "inventory\n  List your possessions.")
+  , ("take", True, pickup, "take <item-name>\n  Pick up an item.")
+  , ("put", True, put, "put <item-name>\n  Put down an item.")
+  , ("forge", True, forge, "forge <name> $ <description>\n  Create a new item. Requires a scroll of forgery.")
+  , ("delete", True, discard, "delete <item-name>\n  Delete an item. Completely. Forever. Think twice.")
+  , ("give", True, give, "give <item-name> to <player-name>\n  Give an item to another player.")
+  , ("say", True, say, "say <text>\n  Say something, everybody in your current room can hear it.")
+  , ("tell", True, tell, "tell <player-name> $ <text>\n  Say something that only one other player can hear.")
+  , ("me", True, me, "me <text>\n  Do something, everybody in your current room can see it.")
+  , ("help", True, help, "")
   ]
 
 dispatch :: Address -> [String] -> Maybe WorldAction
 dispatch playerAddr tokens = do
   case tokens of
     []             -> Nothing
-    (command:args) -> case (filter (\(cname, _, _) -> command `isPrefixOf` cname) commands) of
+    (command:args) -> case (filter (\(cname, _, _, _) -> command `isPrefixOf` cname) commands) of
       []   -> Just $ idWorldAction $ "no such command: " ++ command ++ ". Type \"help commands\" to get a list of what you can do"
-      (_, c, _):[] -> Just $ c playerAddr args
+      (_, _, c, _):[] -> Just $ c playerAddr args
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
-                     ++ (intercalate ", " $ map (\(cname, _, _) -> cname) cs)
+                     ++ (intercalate ", " $ map (\(cname, _, _, _) -> cname) cs)
 
 {--
 nirvana :: Room
