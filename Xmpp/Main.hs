@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Main where
 
 import           Network
@@ -8,8 +9,14 @@ import           Data.List (isPrefixOf, intercalate)
 import qualified Data.Map as Map
 import           Data.Map (Map)
 import           Control.Monad (mapM_)
+import           Control.Monad.Trans (lift)
 import           Data.Maybe (isJust)
 import           Control.Monad.Trans (liftIO)
+import qualified Control.Concurrent.Chan as Chan
+import           Control.Concurrent.Chan (Chan)
+import           Control.Concurrent (forkIO)
+import qualified Control.Monad.State as State
+import           Control.Monad.State (StateT)
 
 -- for logging
 import Data.Time (getCurrentTime)
@@ -53,6 +60,11 @@ botJid :: XmppConfig -> String
 botJid cfg =
   (xmppUsername cfg) ++ "@" ++ (xmppServer cfg) ++ "/" ++ (xmppResource cfg)
 
+data XmppState = XmppState
+  { xChan :: Chan IncomingMessage
+  , xConfig :: XmppConfig
+  }
+
 logString :: String -> IO ()
 logString s = do
   t <- getCurrentTime
@@ -71,6 +83,8 @@ main = withSocketsDo $ do
   -- DONE connecting
 
   XMPP.getStreamStart c
+
+  msgChan <- Chan.newChan :: IO (Chan IncomingMessage)
 
   XMPP.runXMPP c $ do
     -- ...authenticate...
@@ -91,27 +105,31 @@ main = withSocketsDo $ do
             (xmppGroupchatRoom xmppConfig)
             (xmppGroupchatPassword xmppConfig)
 
-        liftIO (loadWorld "save.txt" world) >>= run >>= liftIO . saveWorld "save.txt"
+        _ <- liftIO $ forkIO $ XMPP.runXMPP c $ XMPP.addHandler (const True) (handleAllStanzas msgChan) True
 
-instance MonadHmud XMPP where
+        liftIO (loadWorld "save.txt" world) >>=
+          \w -> State.evalStateT (run w) (XmppState msgChan xmppConfig) >>=
+          liftIO . saveWorld "save.txt"
+
+instance MonadHmud (StateT XmppState XMPP) where
   waitForMessage = do
-    msg <- waitForMessageXmpp
+    msgChan <- State.gets xChan
+    msg <- liftIO $ Chan.readChan msgChan
     liftIO $ logString $ ">> " ++ show msg
     return msg
   sendMessage addr msg = do
     liftIO $ logString $ "<< " ++ addr ++ ": " ++ show msg
-    XMPP.sendMessage addr $ describeMessage addr msg
+    lift $ XMPP.sendMessage addr $ describeMessage addr msg
   mkRandomCharacter = randomCharacter
   debugOut = liftIO . putStrLn
   saveGame f w = liftIO $ saveWorld f w
   loadGame f w = liftIO $ loadWorld f w
 
-waitForMessageXmpp :: XMPP IncomingMessage
-waitForMessageXmpp = do
-  stanza <- XMPP.waitForStanza (const True)
+handleAllStanzas :: Chan IncomingMessage -> XMPP.StanzaHandler
+handleAllStanzas msgChan stanza =
   if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza)
-    then handlePing stanza >> waitForMessageXmpp
-    else maybe waitForMessageXmpp return $ stanza2incomingMessage stanza
+    then handlePing stanza
+    else maybe (return ()) (XMPP.liftIO . Chan.writeChan msgChan) $ stanza2incomingMessage stanza
 
 stanza2incomingMessage :: XMPP.XMLElem -> Maybe IncomingMessage
 stanza2incomingMessage stanza
