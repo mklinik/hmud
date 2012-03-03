@@ -274,22 +274,20 @@ dispatch playerAddr tokens = do
       cs   -> Just $ idWorldAction $ "ambiguous command: " ++ command ++ " could be: "
                      ++ (intercalate ", " $ map (\(cname, _, _, _) -> cname) cs)
 
-{--
-nirvana :: Room
-nirvana = mkRoom
-  "The Real World (tm)"
-  "where the pizza comes from"
-  []
-  []
---}
-
 run :: MonadHmud m => World -> m World
-run world = do
-  msg <- waitForMessage
+run world =
+  waitForMessage >>=
+  handleMessage world >>=
+  either return run
+
+-- returns Right World when we should contineu
+-- returns Lift World when we should exit
+handleMessage :: MonadHmud m => World -> IncomingMessage -> m (Either World World)
+handleMessage world msg =
   case msg of
     MsgCommand playerAddr tokens -> case dispatch playerAddr tokens of
-          Nothing -> run world -- empty command
-          Just a  -> stepWorld playerAddr world a >>= run
+          Nothing -> return $ Right world -- empty command
+          Just a  -> stepWorld playerAddr world a >>= return . Right
     MsgPlayerEnters playerAddr playerName primKey ->
         case findCharacterById primKey world of
           Left _ -> do -- no such character in any of the rooms
@@ -308,7 +306,7 @@ run world = do
             of
               Left err -> debugOut err >> return world
               Right newWorld -> return newWorld
-      >>= run
+      >>= return . Right
     MsgPlayerLeaves playerAddr -> case do
         room <- findRoomOfPlayerByAddress playerAddr world
         let remainingRooms = delete room (worldRooms world)
@@ -316,9 +314,8 @@ run world = do
         let newRoom = room { roomCharacters = delete char (roomCharacters room) }
         Right (world { worldRooms = newRoom:remainingRooms
                      , idleCharacters = char:(idleCharacters world)
-                     }, newRoom, char)
+                     })
       of
-        Left err -> debugOut err >> run world
-        Right (newWorld, newRoom, char) -> run newWorld
-            -- stepWorld playerAddr newWorld (const (newWorld, MsgGoto newRoom char nirvana)) >>= run
-    MsgExit -> return world
+        Left err -> debugOut err >> (return $ Right world)
+        Right newWorld -> return $ Right newWorld
+    MsgExit -> return $ Left world

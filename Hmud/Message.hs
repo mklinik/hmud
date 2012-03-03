@@ -22,14 +22,14 @@ data Message =
   | MsgSay Character String
   | MsgTell Character Character String
   | MsgMe Character String
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 data IncomingMessage =
     MsgCommand Address [String]
   | MsgPlayerEnters Address String String
   | MsgPlayerLeaves Address
   | MsgExit
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 isMsgGoto :: Message -> Bool
 isMsgGoto (MsgGoto _ _ _) = True

@@ -11,7 +11,7 @@ import Hmud.Item
 data World = World { worldRooms :: [Room]
                    , idleCharacters :: [Character]
                    }
-  deriving Eq
+  deriving (Eq, Show, Read)
 
 
 findRoom :: String -> World -> Either String Room

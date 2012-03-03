@@ -13,7 +13,7 @@ data Room = Room { roomName :: String
                  , roomItems :: [Item]
                  , roomAdjacents :: [String]
                  }
-  deriving (Eq)
+  deriving (Eq, Show, Read)
 
 instance Describable Room where
   name = roomName
@@ -31,9 +31,6 @@ instance Describable Room where
         if (not $ null $ roomAdjacents room)
           then "\n\nFrom here you can go to:\n" ++ (intercalate ", " $ roomAdjacents room)
           else "\n\nFrom here, you cannot go anywhere. YOU ARE TRAPPED! Holy cow, how did that happen?"
-
-instance Show Room where
-  show = name
 
 mkRoom :: String -> String -> [String] -> [Item] -> Room
 mkRoom romName description adjacents items =

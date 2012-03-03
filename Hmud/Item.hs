@@ -6,7 +6,7 @@ data Item = Item
   { itemName :: String
   , itemDescription :: String
   }
-  deriving (Show, Eq)
+  deriving (Eq, Show, Read)
 
 instance Describable Item where
   name = itemName

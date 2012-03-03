@@ -10,7 +10,7 @@ import Hmud.Item
 type Address = String
 
 data Race = Human | Elven | Dwarven
-  deriving (Eq, Show, Enum, Bounded)
+  deriving (Eq, Show, Read, Enum, Bounded)
 
 data Role = Fool
           | Thief
@@ -26,7 +26,7 @@ data Role = Fool
           | Necromancer
           | Prince
           | King
-  deriving (Eq, Show, Enum, Bounded)
+  deriving (Eq, Show, Read, Enum, Bounded)
 
 genderedRoles :: [(Role, (String, String))]
 genderedRoles =
@@ -48,7 +48,7 @@ genderedRoles =
   ]
 
 data Gender = Male | Female
-  deriving (Eq, Show, Enum, Bounded)
+  deriving (Eq, Show, Read, Enum, Bounded)
 
 data Character = Character
   { charName :: String
@@ -60,7 +60,7 @@ data Character = Character
   , charAddress :: Address -- address may change
   , charId :: String -- but Id always stays the same
   }
-  deriving Eq
+  deriving (Eq, Show, Read)
 
 instance Describable Character where
   name = charName
@@ -74,9 +74,6 @@ instance Describable Character where
         Just (maleRoleName, femaleRoleName) -> if (charGender char == Male )
                                                then maleRoleName
                                                else femaleRoleName
-
-instance Show Character where
-  show = charName
 
 giveItemToCharacter :: Item -> Character -> Character
 giveItemToCharacter item char = char { charInventory = item : (charInventory char) }
