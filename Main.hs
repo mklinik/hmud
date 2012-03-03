@@ -7,8 +7,9 @@ import Control.Monad.Trans (liftIO)
 import Hmud.Hmud
 import Hmud.Message
 import Hmud.Util
-import Hmud.TestData
+import Hmud.RealData
 import Hmud.Commands
+import Hmud.World
 
 instance MonadHmud (InputT IO) where
   waitForMessage = parseMsg `fmap` getInputLine ">>> "
@@ -19,21 +20,8 @@ instance MonadHmud (InputT IO) where
   debugOut = liftIO . putStrLn
 
 main :: IO ()
-main = runInputT defaultSettings $ do
-  player <- randomCharacter "Markus" "player" "a"
-
-  npc1 <- randomCharacter "Martin" "martin" ""
-  npc2 <- randomCharacter "Karin" "karin" ""
-  npc3 <- randomCharacter "Kathy" "kathy" ""
-
-  w2 <- stepWorld "" world (insertNewPlayer player "Black Unicorn")
-  w3 <- stepWorld "" w2 (insertNewPlayer npc1 "Black Unicorn")
-  w4 <- stepWorld "" w3 (insertNewPlayer npc2 "Black Unicorn")
-  w5 <- stepWorld "" w4 (insertNewPlayer npc3 "town square")
-  w6 <- stepWorld "" w5 (insertItem scroll0 "ivory tower")
-  w7 <- stepWorld "" w6 (insertItem beer "Black Unicorn")
-  w8 <- stepWorld "" w7 (insertItem scroll1 "Black Unicorn")
-
-  _ <- run w8
-
-  liftIO $ putStrLn "bye."
+main = runInputT defaultSettings $
+  liftIO (loadWorld "save.txt" world) >>=
+  flip handleMessage (MsgPlayerEnters "player" "Markus" "a") >>=
+  either return run >>=
+  liftIO . saveWorld "save.txt"
