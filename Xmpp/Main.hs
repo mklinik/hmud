@@ -106,7 +106,9 @@ main = withSocketsDo $ do
             (xmppGroupchatRoom xmppConfig)
             (xmppGroupchatPassword xmppConfig)
 
-        _ <- liftIO $ forkIO $ XMPP.runXMPP c $ XMPP.addHandler (const True) (handleAllStanzas msgChan) True
+        _ <- liftIO $ forkIO $ XMPP.runXMPP c $
+          XMPP.addHandler (const True) (handleAllStanzas msgChan) True >>
+          XMPP.addHandler (XMPP.isIq `XMPP.conj` (isJust . XMPP.xmlPath ["ping"])) handlePing True
 
         liftIO (loadWorld "save.txt" world) >>=
           \w -> State.evalStateT (run w) (XmppState msgChan xmppConfig) >>=
@@ -128,9 +130,7 @@ instance MonadHmud (StateT XmppState XMPP) where
 
 handleAllStanzas :: Chan IncomingMessage -> XMPP.StanzaHandler
 handleAllStanzas msgChan stanza =
-  if XMPP.isIq stanza && isJust (XMPP.xmlPath ["ping"] stanza)
-    then handlePing stanza
-    else maybe (return ()) (XMPP.liftIO . Chan.writeChan msgChan) $ stanza2incomingMessage stanza
+    maybe (return ()) (XMPP.liftIO . Chan.writeChan msgChan) $ stanza2incomingMessage stanza
 
 stanza2incomingMessage :: XMPP.XMLElem -> Maybe IncomingMessage
 stanza2incomingMessage stanza
@@ -154,9 +154,9 @@ stanza2incomingMessage stanza
         _ -> Nothing
   | otherwise = Nothing
 
-handlePing :: XMPP.XMLElem -> XMPP ()
-handlePing stanza = do
-  maybe (return ()) (XMPP.sendStanza) $ constructPong stanza
+handlePing :: XMPP.StanzaHandler
+handlePing stanza =
+  maybe (return ()) (\s -> (XMPP.liftIO $ logString "ping") >> XMPP.sendStanza s) $ constructPong stanza
 
 constructPong :: XMPP.XMLElem -> Maybe XMPP.XMLElem
 constructPong stanza = do
