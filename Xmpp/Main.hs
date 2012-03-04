@@ -111,7 +111,7 @@ main = withSocketsDo $ do
 instance MonadHmud (StateT XmppState XMPP) where
   waitForMessage = do
     msgChan <- State.gets xChan
-    msg <- liftIO $ Ex.catch (Chan.readChan msgChan) (\Ex.UserInterrupt -> return MsgExit)
+    msg <- liftIO $ Ex.catch (Chan.readChan msgChan) (\(Ex.SomeException _) -> return MsgExit)
     liftIO $ logString $ ">> " ++ show msg
     return msg
   sendMessage addr msg = do
