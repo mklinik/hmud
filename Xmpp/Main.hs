@@ -69,8 +69,9 @@ logString s = do
 
 main :: IO ()
 main = withSocketsDo $ do
-
   Just xmppConfig <- readXmppConfig "hmudrc"
+  msgChan <- Chan.newChan :: IO (Chan IncomingMessage)
+  let xmppState = (XmppState msgChan xmppConfig)
 
   -- see ssl_server.txt
   c <- if xmppUseSSL xmppConfig
@@ -80,11 +81,7 @@ main = withSocketsDo $ do
 
   XMPP.getStreamStart c
 
-  msgChan <- Chan.newChan :: IO (Chan IncomingMessage)
-  let xmppState = (XmppState msgChan xmppConfig)
-
   XMPP.runXMPP c $ do
-    -- ...authenticate...
     success <- XMPP.startAuth
         (xmppUsername xmppConfig)
         (xmppServer xmppConfig)
@@ -95,17 +92,18 @@ main = withSocketsDo $ do
         error "Authentication not successful."
       else do
         XMPP.sendPresence (Just ("", [homepageURL, ""])) Nothing
-        -- ...and do something.
 
         XMPP.joinGroupchat
             (xmppGroupchatNick xmppConfig)
             (xmppGroupchatRoom xmppConfig)
             (xmppGroupchatPassword xmppConfig)
 
+        -- stanza handlers get their own thread
         _ <- liftIO $ forkIO $ XMPP.runXMPP c $
           XMPP.addHandler (const True) (handleAllStanzas xmppState) True >>
           XMPP.addHandler (XMPP.isIq `XMPP.conj` (isJust . XMPP.xmlPath ["ping"])) handlePing True
 
+        -- run blocking until MsgExit
         liftIO (loadWorld "save.txt" world) >>=
           \w -> State.evalStateT (run w) xmppState >>=
           liftIO . saveWorld "save.txt"
