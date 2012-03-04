@@ -17,6 +17,7 @@ import           Control.Concurrent.Chan (Chan)
 import           Control.Concurrent (forkIO)
 import qualified Control.Monad.State as State
 import           Control.Monad.State (StateT)
+import qualified Control.Exception as Ex
 
 -- for logging
 import Data.Time (getCurrentTime)
@@ -114,7 +115,7 @@ main = withSocketsDo $ do
 instance MonadHmud (StateT XmppState XMPP) where
   waitForMessage = do
     msgChan <- State.gets xChan
-    msg <- liftIO $ Chan.readChan msgChan
+    msg <- liftIO $ Ex.catch (Chan.readChan msgChan) (\Ex.UserInterrupt -> return MsgExit)
     liftIO $ logString $ ">> " ++ show msg
     return msg
   sendMessage addr msg = do

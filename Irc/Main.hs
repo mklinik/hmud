@@ -8,6 +8,7 @@ import           Control.Concurrent.Chan
 import           Control.Concurrent (forkIO)
 import qualified Control.Monad.State as State
 import           Control.Monad.State (liftIO, StateT, evalStateT)
+import qualified Control.Exception as Ex
 
 import Hmud.Item
 import Hmud.Describable
@@ -65,7 +66,7 @@ instance MonadHmud (StateT (IRC.MIrc, Chan IncomingMessage) IO) where
   waitForMessage = do
     (_, msgChan) <- State.get
     debugOut "waiting for message"
-    liftIO $ readChan msgChan
+    liftIO $ Ex.catch (readChan msgChan) (\Ex.UserInterrupt -> return MsgExit)
   sendMessage addr msg = do
     (server, _) <- State.get
     liftIO $ IRC.sendMsg server (B.pack addr) (B.pack $ describeMessage addr msg)
