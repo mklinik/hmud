@@ -48,6 +48,7 @@ data XmppConfig = XmppConfig
   , xmppGroupchatRoom :: String
   , xmppGroupchatPassword :: Maybe String
   , xmppGroupchatNick :: String
+  , xmppUseSSL :: Bool
   }
 
 botJid :: XmppConfig -> String
@@ -71,12 +72,11 @@ main = withSocketsDo $ do
 
   Just xmppConfig <- readXmppConfig "hmudrc"
 
-  -- EITHER: Connect to server with SSL: you need ncat running, see ssl_server.txt
-  s <- XMPP.connectStream [("localhost", PortNumber 31337)]
-  c <- XMPP.sendStreamHeader s (xmppServer xmppConfig)
-  -- OR: Connect to server without SSL
-  -- c <- XMPP.openStream (xmppServer xmppConfig)
-  -- DONE connecting
+  -- see ssl_server.txt
+  c <- if xmppUseSSL xmppConfig
+         then XMPP.connectStream [("localhost", PortNumber 31337)] >>=
+              flip XMPP.sendStreamHeader (xmppServer xmppConfig)
+         else XMPP.openStream (xmppServer xmppConfig)
 
   XMPP.getStreamStart c
 
@@ -174,6 +174,7 @@ readXmppConfig_ fileContent = do
   groupchat      <- Config.lookup "xmpp" "groupchatRoom" config
   let groupchatPw = Config.lookup "xmpp" "groupchatPassword" config
   groupchatNick  <- Config.lookup "xmpp" "groupchatNick" config
+  useSSL         <- Config.lookup "xmpp" "useSSL" config
   return XmppConfig
     { xmppUsername = username
     , xmppServer = server
@@ -182,4 +183,5 @@ readXmppConfig_ fileContent = do
     , xmppGroupchatRoom = groupchat
     , xmppGroupchatPassword = groupchatPw
     , xmppGroupchatNick = groupchatNick
+    , xmppUseSSL = useSSL == "yes"
     }
