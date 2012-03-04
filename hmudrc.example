@@ -1,0 +1,10 @@
+[xmpp]
+  username = oracle
+  server = localhost
+  password = abc
+  resource = oracle
+  groupchatRoom = gtf@conference.localhost
+  groupchatNick = oracle
+  useSSL = no
+
+# vim: ft=dosini
