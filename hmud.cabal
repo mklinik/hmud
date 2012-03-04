@@ -28,6 +28,7 @@ executable xmppFrontend
       , old-locale
       , containers
       , network
+      , config-ng
   else
     buildable: False
 
@@ -38,5 +39,6 @@ executable ircFrontend
     build-depends:
         bytestring
       , simpleirc
+      , config-ng
   else
     buildable: False

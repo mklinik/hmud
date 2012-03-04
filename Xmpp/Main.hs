@@ -19,6 +19,10 @@ import qualified Control.Monad.State as State
 import           Control.Monad.State (StateT)
 import qualified Control.Exception as Ex
 
+-- config file handling
+import qualified Data.Config.String as Config
+import           Data.Config.String (Config)
+
 -- for logging
 import Data.Time (getCurrentTime)
 import System.Locale (defaultTimeLocale, rfc822DateFormat)
@@ -46,17 +50,6 @@ data XmppConfig = XmppConfig
   , xmppGroupchatNick :: String
   }
 
-xmppConfig :: XmppConfig
-xmppConfig = XmppConfig
-  { xmppUsername = "oracle"
-  , xmppServer = "localhost"
-  , xmppPassword = "abc"
-  , xmppResource = "oracle"
-  , xmppGroupchatRoom = "gtf@conference.localhost"
-  , xmppGroupchatPassword = Nothing
-  , xmppGroupchatNick = "oracle"
-  }
-
 botJid :: XmppConfig -> String
 botJid cfg =
   (xmppUsername cfg) ++ "@" ++ (xmppServer cfg) ++ "/" ++ (xmppResource cfg)
@@ -76,16 +69,19 @@ logString s = do
 main :: IO ()
 main = withSocketsDo $ do
 
+  Just xmppConfig <- readXmppConfig "hmudrc"
+
   -- EITHER: Connect to server with SSL: you need ncat running, see ssl_server.txt
-  -- s <- XMPP.connectStream [("localhost", PortNumber 31337)]
-  -- c <- XMPP.sendStreamHeader s botServer
+  s <- XMPP.connectStream [("localhost", PortNumber 31337)]
+  c <- XMPP.sendStreamHeader s (xmppServer xmppConfig)
   -- OR: Connect to server without SSL
-  c <- XMPP.openStream (xmppServer xmppConfig)
+  -- c <- XMPP.openStream (xmppServer xmppConfig)
   -- DONE connecting
 
   XMPP.getStreamStart c
 
   msgChan <- Chan.newChan :: IO (Chan IncomingMessage)
+  let xmppState = (XmppState msgChan xmppConfig)
 
   XMPP.runXMPP c $ do
     -- ...authenticate...
@@ -107,11 +103,11 @@ main = withSocketsDo $ do
             (xmppGroupchatPassword xmppConfig)
 
         _ <- liftIO $ forkIO $ XMPP.runXMPP c $
-          XMPP.addHandler (const True) (handleAllStanzas msgChan) True >>
+          XMPP.addHandler (const True) (handleAllStanzas xmppState) True >>
           XMPP.addHandler (XMPP.isIq `XMPP.conj` (isJust . XMPP.xmlPath ["ping"])) handlePing True
 
         liftIO (loadWorld "save.txt" world) >>=
-          \w -> State.evalStateT (run w) (XmppState msgChan xmppConfig) >>=
+          \w -> State.evalStateT (run w) xmppState >>=
           liftIO . saveWorld "save.txt"
 
 instance MonadHmud (StateT XmppState XMPP) where
@@ -128,16 +124,16 @@ instance MonadHmud (StateT XmppState XMPP) where
   saveGame f w = liftIO $ saveWorld f w
   loadGame f w = liftIO $ loadWorld f w
 
-handleAllStanzas :: Chan IncomingMessage -> XMPP.StanzaHandler
-handleAllStanzas msgChan stanza =
-    maybe (return ()) (XMPP.liftIO . Chan.writeChan msgChan) $ stanza2incomingMessage stanza
+handleAllStanzas :: XmppState -> XMPP.StanzaHandler
+handleAllStanzas state@(XmppState msgChan _) stanza =
+    maybe (return ()) (XMPP.liftIO . Chan.writeChan msgChan) $ stanza2incomingMessage state stanza
 
-stanza2incomingMessage :: XMPP.XMLElem -> Maybe IncomingMessage
-stanza2incomingMessage stanza
+stanza2incomingMessage :: XmppState -> XMPP.XMLElem -> Maybe IncomingMessage
+stanza2incomingMessage (XmppState _ cfg) stanza
   | XMPP.isChat stanza = do
       sender <- XMPP.getAttr "from" stanza
       tokens <- words `fmap` (XMPP.getMessageBody stanza)
-      if sender == botJid xmppConfig
+      if sender == botJid cfg
         then Nothing -- filter messages from myself
         else return $ MsgCommand sender tokens
   | XMPP.isGroupchatPresence stanza = do
@@ -146,7 +142,7 @@ stanza2incomingMessage stanza
       case presence of
         XMPP.RoleChange _ -> do
           jid <- XMPP.occJid occupant
-          if jid == botJid xmppConfig
+          if jid == botJid cfg
             then Nothing -- filter presence msg from myself
             else return $ MsgPlayerEnters sender (jid2player jid) (jid2primKey jid)
         XMPP.Leave ->
@@ -164,3 +160,26 @@ constructPong stanza = do
   from   <- XMPP.getAttr "from" stanza
   to     <- XMPP.getAttr "to" stanza
   return $ XMPP.XML "iq" [("from", to), ("to", from), ("id", idAttr), ("type", "result")] []
+
+readXmppConfig :: FilePath -> IO (Maybe XmppConfig)
+readXmppConfig fileName = readXmppConfig_ `fmap` readFile fileName
+
+readXmppConfig_ :: String -> Maybe XmppConfig
+readXmppConfig_ fileContent = do
+  config <- either (const Nothing) Just $ Config.parse fileContent
+  username       <- Config.lookup "xmpp" "username" config
+  server         <- Config.lookup "xmpp" "server" config
+  password       <- Config.lookup "xmpp" "password" config
+  resource       <- Config.lookup "xmpp" "resource" config
+  groupchat      <- Config.lookup "xmpp" "groupchatRoom" config
+  let groupchatPw = Config.lookup "xmpp" "groupchatPassword" config
+  groupchatNick  <- Config.lookup "xmpp" "groupchatNick" config
+  return XmppConfig
+    { xmppUsername = username
+    , xmppServer = server
+    , xmppPassword = password
+    , xmppResource = resource
+    , xmppGroupchatRoom = groupchat
+    , xmppGroupchatPassword = groupchatPw
+    , xmppGroupchatNick = groupchatNick
+    }
